@@ -44,7 +44,7 @@ if st.session_state.mid:
         st.session_state.choose_side=side
 if st.session_state.choose_side and st.session_state.players is None:
     tid=requests.get(f"https://www.sofascore.com/api/v1/event/{st.session_state.mid}").json()['event'][st.session_state.choose_side]['id']
-    players={x["player"]['name']:x["player"]['id'] for x in requests.get("https://www.sofascore.com/api/v1/team/187735/players").json()['players']}
+    players={x["player"]['name']:x["player"]['id'] for x in requests.get(f"https://www.sofascore.com/api/v1/team/{tid}/players").json()['players']}
     st.session_state.players=players
     player = st.selectbox("Players", list(st.session_state.players.keys()))
     pid = st.session_state.players[player]

@@ -19,7 +19,7 @@ def converter(gif_path):
         with open(gif_path, 'rb') as f:
             st.write("Found GIF file:", gif_path)
     except FileNotFoundError:
-    st.error("GIF file not found!")
+        st.error("GIF file not found!")
     else:
     # Create a temporary file to save the converted video
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4",prefix=gif_path[:-4]) as temp_file:

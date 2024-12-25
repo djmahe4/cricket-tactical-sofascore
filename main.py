@@ -33,13 +33,14 @@ if st.button("Start"):
 # Show dropdowns only after the "Start Analysis" button is clicked
 if st.session_state.match_selected:
     choice = st.selectbox("Match", list(st.session_state.choices.keys()))
-    match_id = st.session_state.choices[choice]
-    st.write(f"Selected match: {choice}")
-    st.write(f"Match ID: {match_id}")
-    st.session_state.mid=match_id
-    side=st.radio("Home/Away",["homeTeam","awayTeam"])
-    if st.button("Show Players"):
-        st.session_state.choose_side=side
+    if st.button("Selected"):
+        match_id = st.session_state.choices[choice]
+        st.write(f"Selected match: {choice}")
+        st.write(f"Match ID: {match_id}")
+        st.session_state.mid=match_id
+        side=st.radio("Home/Away",["homeTeam","awayTeam"])
+        if st.button("Show Players"):
+            st.session_state.choose_side=side
 if st.session_state.choose_side and st.session_state.players is None:
     tid=requests.get(f"https://www.sofascore.com/api/v1/event/{st.session_state.mid}").json()['event'][st.session_state.choose_side]['id']
     players={x["player"]['name']:x["player"]['id'] for x in requests.get("https://www.sofascore.com/api/v1/team/187735/players").json()['players']}

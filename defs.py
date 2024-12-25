@@ -6,8 +6,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Circle
+from moviepy.editor import VideoFileClip
 #import matplotlib.animation as animation
-from matplotlib.animation import FuncAnimation, FFMpegWriter
+from matplotlib.animation import FuncAnimation,PillowWriter
 import streamlit as st
 #import imagio
 #import os
@@ -273,6 +274,9 @@ def create_bat_animation(det,role):
 
     ani = FuncAnimation(fig, update, frames=len(det[role]['runs']), repeat=False)
     #ani.save(f'cricket_animation_with_{role}.mp4', writer='ffmpeg', fps=1)
-    ffmpeg_writer = FFMpegWriter(fps=1, metadata=dict(artist='Me'), bitrate=1800) 
-    ani.save('cricket_animation_with_role.mp4', writer=ffmpeg_writer)
+    gif_writer = PillowWriter(fps=1)
+    ani.save(f'cricket_animation_with_{role}.gif', writer=gif_writer)
+    # Load the GIF file 
+    clip = VideoFileClip("cricket_animation_with_role.gif") # Save the GIF as an MP4 file 
+    clip.write_videofile("cricket_animation_with_role.mp4", fps=1)
     return f'cricket_animation_with_{role}.mp4'

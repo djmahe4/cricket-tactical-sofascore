@@ -51,13 +51,14 @@ if st.session_state.choose_side and st.session_state.players is None:
     if st.session_state.tid:
         players={x["player"]['name']:x["player"]['id'] for x in requests.get(f"https://www.sofascore.com/api/v1/team/{tid}/players").json()['players']}
         st.session_state.players=players
-        player = st.selectbox("Players", list(st.session_state.players.keys()))
-        st.session_state.player_name=player
-        if st.session_state.player_name:
-            pid = st.session_state.players[player]
-            if st.button("Choose"):
-                st.session_state.pid=pid
-                st.write(pid,player)
+if st.session_state.players:
+    player = st.selectbox("Players", list(st.session_state.players.keys()))
+    st.session_state.player_name=player
+if st.session_state.player_name:
+    pid = st.session_state.players[player]
+    if st.button("Choose"):
+        st.session_state.pid=pid
+        st.write(pid,player)
 if st.session_state.pid:
     mformat=st.selectbox("Choose format",["T20","ODI","Test"])
     if st.button("Select"):

@@ -10,8 +10,37 @@ import numpy as np
 from matplotlib.patches import Circle
 import matplotlib.animation as animation
 import streamlit as st
+from matplotlib.animation import FuncAnimation,PillowWriter
+import streamlit as st
+import imageio
+import tempfile
 #import os
 #os.environ["PATH"] += os.pathsep + r'C:\ffmpeg-master-latest-win64-gpl\bin'
+def converter(gif_path):
+    try:
+        with open(gif_path, 'rb') as f:
+            st.write("Found GIF file:", gif_path)
+    except FileNotFoundError:
+        st.error("GIF file not found!")
+    else:
+    # Create a temporary file to save the converted video
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4",prefix=gif_path[:-4]) as temp_file:
+        # Read the existing GIF file and convert it to MP4
+            gif_reader = imageio.get_reader(gif_path)
+            fps = 1  # Get frames per second from GIF metadata
+        
+        # Create a video writer for MP4 format
+            with imageio.get_writer(temp_file.name, format='mp4', fps=fps) as video_writer:
+                for frame in gif_reader:
+                    video_writer.append_data(frame)
+
+        # Provide a download link for the converted MP4 file
+            st.success("Conversion successful!")
+            st.video(temp_file.name)
+        
+        # Read the contents of the temporary file for download
+            with open(temp_file.name, "rb") as f:
+                st.download_button(label="Download MP4", data=f.read(), file_name=f"{temp_file.name}", mime="video/mp4")
 
 def determine_match_format(data):
     """Determines the cricket match format based on innings data.
@@ -191,7 +220,10 @@ def create_ball_animation(det,role):
             ax2.set_title("Wagon wheel (left) and Pitch plot (right)")
 
     ani = animation.FuncAnimation(fig, update, frames=len(det[role]['runs']), repeat=False)
-    ani.save(f'cricket_animation_with_{role}.mp4', writer='ffmpeg', fps=1)
+    gif_writer = PillowWriter(fps=1)
+    ani.save(f'cricket_animation_with_{role}.gif', writer=gif_writer)
+    converter(f'cricket_animation_with_{role}.gif')
+    #ani.save(f'cricket_animation_with_{role}.mp4', writer='ffmpeg', fps=1)
     return f'cricket_animation_with_{role}.mp4'
 def bowler_ball_by_ball(incidents):
     det = {}
@@ -270,9 +302,10 @@ def main(st):
         for role in st.session_state.det2:
             with st.spinner(f"Performance analysis vs {role}"):
                 st.markdown(f"# vs {role}")
-                file = create_ball_animation(det, role)
-                video_file = open(file, 'rb')
-                video_bytes = video_file.read()
-                st.video(video_bytes)
-                video_file.close()
+                create_ball_animation(det, role)
+                #file = create_ball_animation(det, role)
+                #video_file = open(file, 'rb')
+                #video_bytes = video_file.read()
+                #st.video(video_bytes)
+                #video_file.close()
         st.success("Process Complete!!")

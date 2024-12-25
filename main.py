@@ -3,12 +3,14 @@ import datetime
 from defs import *
 import requests
 from test import main
+import os
 
 st.title("Sofascore Tactical Analysis")
 st.write(datetime.datetime.today())
 
 # Define a button to start the analysis after choices are made
 if 'match_selected' not in st.session_state:
+    os.popen("sudo apt install ffmpeg")
     st.session_state.match_selected = False
     st.session_state.mid = None
     st.session_state.choose_side = None

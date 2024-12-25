@@ -6,7 +6,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Circle
-import matplotlib.animation as animation
+#import matplotlib.animation as animation
+from matplotlib.animation import FuncAnimation, FFMpegWriter
 import streamlit as st
 #import imagio
 #import os
@@ -270,6 +271,8 @@ def create_bat_animation(det,role):
             ax2.invert_yaxis()
             ax2.set_title("Wagon wheel (left) and Pitch plot (right)")
 
-    ani = animation.FuncAnimation(fig, update, frames=len(det[role]['runs']), repeat=False)
-    ani.save(f'cricket_animation_with_{role}.mp4', writer='ffmpeg', fps=1)
+    ani = FuncAnimation(fig, update, frames=len(det[role]['runs']), repeat=False)
+    #ani.save(f'cricket_animation_with_{role}.mp4', writer='ffmpeg', fps=1)
+    ffmpeg_writer = FFMpegWriter(fps=1, metadata=dict(artist='Me'), bitrate=1800) 
+    ani.save('cricket_animation_with_role.mp4', writer=ffmpeg_writer)
     return f'cricket_animation_with_{role}.mp4'

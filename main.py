@@ -105,9 +105,10 @@ if st.session_state.det and st.session_state.switch ==False:
     for role in st.session_state.det:
         with st.spinner(f"Performance analysis vs {role}"):
             st.markdown(f"# vs {role}")
-            file=create_bat_animation(det,role)
-            video_file = open(file, 'rb')
-            video_bytes = video_file.read()
-            st.video(video_bytes)
-            video_file.close()
+            create_bat_animation(det,role)
+            #file=create_bat_animation(det,role)
+            #video_file = open(file, 'rb')
+            #video_bytes = video_file.read()
+            #st.video(video_bytes)
+            #video_file.close()
     st.success("Process Complete!!")

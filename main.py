@@ -42,6 +42,7 @@ if st.session_state.mid:
     side=st.radio("Home/Away",["homeTeam","awayTeam"])
     if st.button("Show Players"):
         st.session_state.choose_side=side
+st.write(st.session_state)
 if st.session_state.choose_side and st.session_state.players is None:
     tid=requests.get(f"https://www.sofascore.com/api/v1/event/{st.session_state.mid}").json()['event'][st.session_state.choose_side]['id']
     players={x["player"]['name']:x["player"]['id'] for x in requests.get(f"https://www.sofascore.com/api/v1/team/{tid}/players").json()['players']}

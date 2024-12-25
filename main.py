@@ -10,9 +10,9 @@ st.write(datetime.datetime.today())
 
 # Define a button to start the analysis after choices are made
 if 'match_selected' not in st.session_state:
-    os.popen("sudo apt update")
-    os.popen("sudo apt install ffmpeg")
-    os.popen("ffmpeg -version")
+    #os.popen("sudo apt update")
+    os.popen("pip install moviepy")
+    #os.popen("ffmpeg -version")
     st.session_state.match_selected = False
     st.session_state.mid = None
     st.session_state.choose_side = None

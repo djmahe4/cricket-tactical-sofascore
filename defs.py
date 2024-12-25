@@ -10,7 +10,7 @@ from matplotlib.patches import Circle
 #import matplotlib.animation as animation
 from matplotlib.animation import FuncAnimation,PillowWriter
 import streamlit as st
-import imagio
+import imageio
 import tempfile
 #import os
 #os.environ["PATH"] += os.pathsep + r'C:\ffmpeg-master-latest-win64-gpl\bin'

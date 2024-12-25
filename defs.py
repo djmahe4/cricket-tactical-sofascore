@@ -6,13 +6,40 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Circle
-from moviepy.editor import VideoFileClip
+#from moviepy.editor import VideoFileClip
 #import matplotlib.animation as animation
 from matplotlib.animation import FuncAnimation,PillowWriter
 import streamlit as st
-#import imagio
+import imagio
+import tempfile
 #import os
 #os.environ["PATH"] += os.pathsep + r'C:\ffmpeg-master-latest-win64-gpl\bin'
+def converter(gif_path):
+    try:
+        with open(gif_path, 'rb') as f:
+            st.write("Found GIF file:", gif_path)
+    except FileNotFoundError:
+    st.error("GIF file not found!")
+    else:
+    # Create a temporary file to save the converted video
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4",prefix=gif_path[:-4]) as temp_file:
+        # Read the existing GIF file and convert it to MP4
+            gif_reader = imageio.get_reader(gif_path)
+            fps = gif_reader.get_meta_data()['fps']  # Get frames per second from GIF metadata
+        
+        # Create a video writer for MP4 format
+            with imageio.get_writer(temp_file.name, format='mp4', fps=fps) as video_writer:
+                for frame in gif_reader:
+                    video_writer.append_data(frame)
+
+        # Provide a download link for the converted MP4 file
+            st.success("Conversion successful!")
+            st.video(temp_file.name)
+        
+        # Read the contents of the temporary file for download
+            with open(temp_file.name, "rb") as f:
+                st.download_button(label="Download MP4", data=f.read(), file_name=f"{temp_file.name}", mime="video/mp4")
+
 def init():
     # Get today's date
     today = datetime.date.today() # Format the date as YYYY-MM-DD
@@ -277,6 +304,7 @@ def create_bat_animation(det,role):
     gif_writer = PillowWriter(fps=1)
     ani.save(f'cricket_animation_with_{role}.gif', writer=gif_writer)
     # Load the GIF file 
-    clip = VideoFileClip("cricket_animation_with_role.gif") # Save the GIF as an MP4 file 
-    clip.write_videofile("cricket_animation_with_role.mp4", fps=1)
+    #clip = VideoFileClip("cricket_animation_with_role.gif") # Save the GIF as an MP4 file 
+    #clip.write_videofile("cricket_animation_with_role.mp4", fps=1)
+    converter(f'cricket_animation_with_{role}.gif')
     return f'cricket_animation_with_{role}.mp4'

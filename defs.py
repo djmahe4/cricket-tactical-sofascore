@@ -248,7 +248,7 @@ def create_bat_animation(det,role):
 
     # Create a Text object for the title *outside* the update function
     title_text = ax1.text(0.02, 1.05, "", transform=ax1.transAxes, fontsize=12, ha='left', va='top')
-
+    bowlers=[]
     def update(frame):
         #ax1.clear()  # No longer needed to clear the whole axes
         #ax1.add_patch(circle) #no longer needed to add the circle again and again
@@ -268,13 +268,14 @@ def create_bat_animation(det,role):
         # Update the text of the title object
         title_text.set_text(f"{bowler_name} ({bowler_type})")
         try:
-          if bowler_name != det[role]['bowler'][frame+1]:
+          if bowler_name != det[role]['bowler'][frame+1] and bowler_name not in bowlers:
               df =analyze_bowling_stats(det, role, det[role]['bowler'][frame])
               last_row = df.iloc[-1]
               print(f"{bowler_name} ({bowler_type})")
               print(last_row)
               st.markdown(f"## {bowler_name} ({bowler_type})")
               st.dataframe(last_row.transpose())
+              bowlers.append(bowler_name)
         except:
           print("Last record")
         ax1.set_xlim([-10, 10])

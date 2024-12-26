@@ -129,7 +129,7 @@ def get_matches(pid,matches=[], format="T20", ind=0):
   conn.request("GET", parsed.path)
   res = conn.getresponse()
   data = res.read()
-  st.wite(data)
+  #st.wite(data)
   jdata = json.loads(data.decode("utf-8"))
   #print(jdata['events'][0])
   try:

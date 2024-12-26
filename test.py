@@ -292,6 +292,7 @@ def main(st):
                     continue
         st.session_state.incidents2 = incidents
         st.success("Filtering Success...")
+        st.write(st.session_state.incidents2)
         print(st.session_state)
     if st.session_state.incidents2:
         with st.spinner("Extracting ball by ball data"):

@@ -302,10 +302,7 @@ def create_bat_animation(det,role):
             ax2.set_title("Wagon wheel (left) and Pitch plot (right)")
 
     ani = FuncAnimation(fig, update, frames=len(det[role]['runs']), repeat=False)
-    #gif_writer = PillowWriter(fps=1)
-    #ani.save(f'cricket_animation_with_{role}.gif', writer=gif_writer)
-    html = ani.to_jshtml()
-    st.components.v1.html(html, height=500)
-    if st.button("Download as mp4"):
-        converter(f'cricket_animation_with_{role}.gif')
+    gif_writer = PillowWriter(fps=1)
+    ani.save(f'cricket_animation_with_{role}.gif', writer=gif_writer)
+    converter(f'cricket_animation_with_{role}.gif')
     return f'cricket_animation_with_{role}.mp4'

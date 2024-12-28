@@ -34,7 +34,7 @@ def converter(gif_path):
 
         # Provide a download link for the converted MP4 file
             st.success("Conversion successful!")
-            #st.video(temp_file.name)
+            st.video(temp_file.name)
         
         # Read the contents of the temporary file for download
             with open(temp_file.name, "rb") as f:

@@ -220,11 +220,11 @@ def create_ball_animation(det,role):
             ax2.set_title("Wagon wheel (left) and Pitch plot (right)")
 
     ani = animation.FuncAnimation(fig, update, frames=len(det[role]['runs']), repeat=False)
-    html = ani.to_jshtml()
-    st.components.v1.html(html, height=500)
-    #gif_writer = PillowWriter(fps=1)
-    #ani.save(f'cricket_animation_with_{role}.gif', writer=gif_writer)
-    #converter(f'cricket_animation_with_{role}.gif')
+    #html = ani.to_jshtml()
+    #st.components.v1.html(html, height=500)
+    #=gif_writer = PillowWriter(fps=1)
+    ani.save(f'cricket_animation_with_{role}.gif', writer=gif_writer)
+    converter(f'cricket_animation_with_{role}.gif')
     #ani.save(f'cricket_animation_with_{role}.mp4', writer='ffmpeg', fps=1) Dont uncomment
     return f'cricket_animation_with_{role}.mp4'
 def bowler_ball_by_ball(incidents):

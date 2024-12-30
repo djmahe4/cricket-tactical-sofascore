@@ -31,7 +31,7 @@ def converter(gif_path):
             st.write(f"Temporary file created: {temp_file.name}")
 
             # Create a video writer for MP4 format
-            with imageio.get_writer(temp_file.name, format='mp4', fps=fps) as video_writer:
+            with imageio.get_writer(temp_file.path, format='mp4', fps=fps) as video_writer:
                 for frame in gif_reader:
                     video_writer.append_data(frame)
 

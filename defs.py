@@ -11,9 +11,10 @@ from matplotlib.patches import Circle
 from matplotlib.animation import FuncAnimation,PillowWriter
 import streamlit as st
 import imageio
-import tempfile
+import tempfile,os
 
 def converter(gif_path):
+    os.popen("pip install imageio[pyav]")
     try:
         with open(gif_path, 'rb') as f:
             st.write("Found GIF file:", gif_path)

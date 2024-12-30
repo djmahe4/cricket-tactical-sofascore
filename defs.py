@@ -24,7 +24,7 @@ def converter(gif_path):
 
     try:
         # Create a temporary file to save the converted video
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4",prefix=gif_path[:-4]) as temp_file:
+        with tempfile.TemporaryFile(delete=False, suffix=".mp4",prefix=gif_path[:-4]) as temp_file:
             gif_reader = imageio.get_reader(gif_path, format='GIF')
             fps = gif_reader.get_meta_data().get('fps', 10)  # Default to 10 FPS if metadata is missing
 

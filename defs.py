@@ -14,7 +14,7 @@ import imageio
 import tempfile,os
 
 def converter(gif_path):
-    os.popen("pip install imageio[pyav]")
+    os.popen("pip install imageio[ffmpeg]")
     try:
         with open(gif_path, 'rb') as f:
             st.write("Found GIF file:", gif_path)

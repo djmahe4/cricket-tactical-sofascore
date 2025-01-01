@@ -16,6 +16,7 @@ import imageio
 import tempfile
 import os
 os.environ["PATH"] += os.pathsep + r'C:\ffmpeg-master-latest-win64-gpl\bin'
+os.popen("pip install imageio[ffmpeg]")
 def converter(gif_path):
     try:
         with open(gif_path, 'rb') as f:

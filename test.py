@@ -16,32 +16,37 @@ import imageio
 import tempfile
 import os
 #os.environ["PATH"] += os.pathsep + r'C:\ffmpeg-master-latest-win64-gpl\bin'
-os.popen("pip install imageio[ffmpeg]")
 def converter(gif_path):
+    #os.popen("pip install imageio[ffmpeg]")
+    #imageio.plugins.ffmpeg.download()
     try:
         with open(gif_path, 'rb') as f:
             st.write("Found GIF file:", gif_path)
     except FileNotFoundError:
         st.error("GIF file not found!")
-    else:
-    # Create a temporary file to save the converted video
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4",prefix=gif_path[:-4]) as temp_file:
-            st.write(temp_file.name)
-        # Read the existing GIF file and convert it to MP4
-            gif_reader = imageio.get_reader(gif_path)
-            fps = 1  # Get frames per second from GIF metadata
-        # Create a video writer for MP4 format
-            with imageio.get_writer(temp_file.name,format='mp4',fps=fps) as video_writer:
+        return
+
+    try:
+        # Create a temporary file to save the converted video
+        with tempfile.NamedTemporaryFile(suffix=".mp4",prefix=gif_path[:-4]) as temp_file:
+            gif_reader = imageio.get_reader(gif_path, format='GIF')
+            fps = gif_reader.get_meta_data().get('fps', 1)  # Default to 1 FPS if metadata is missing
+
+            st.write(f"Temporary file created: {temp_file.name}")
+
+            # Create a video writer for MP4 format
+            with imageio.get_writer(temp_file.name, format='mp4', fps=fps) as video_writer:
                 for frame in gif_reader:
                     video_writer.append_data(frame)
 
-        # Provide a download link for the converted MP4 file
             st.success("Conversion successful!")
             st.video(temp_file.name)
-        
-        # Read the contents of the temporary file for download
+
+            # Provide a download link for the converted MP4 file
             with open(temp_file.name, "rb") as f:
-                st.download_button(label="Download MP4", data=f.read(), file_name=f"{temp_file.name}", mime="video/mp4")
+                st.download_button(label="Download MP4", data=f.read(), file_name=f"{gif_path[:-4]}.mp4", mime="video/mp4")
+    except Exception as e:
+        st.error(f"An error occurred during conversion: {e}")
 
 def determine_match_format(data):
     """Determines the cricket match format based on innings data.

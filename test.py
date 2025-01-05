@@ -288,6 +288,7 @@ def append_ball_data(mid,pid,incidents=[]):
     for i in jdata:
         if i["bowler"]["id"] == pid:
             incidents.append(i)
+            st.write(i)
     return incidents
 
 def main(st):

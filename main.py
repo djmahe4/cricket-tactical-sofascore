@@ -10,8 +10,7 @@ import streamlit.components.v1 as components
 source_code="
 <html>
 <head>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4547808875113951"
-     crossorigin="anonymous"></script>
+<meta name="google-adsense-account" content="ca-pub-4547808875113951">
 </head>
 </html>
 "

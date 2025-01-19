@@ -9,8 +9,10 @@ import streamlit.components.v1 as components
 # Read AdSense HTML file
 source_code="
 <html>
+<head>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4547808875113951"
      crossorigin="anonymous"></script>
+</head>
 </html>
 "
 

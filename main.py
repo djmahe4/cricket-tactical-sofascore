@@ -17,7 +17,7 @@ source_code="
 "
 
 # Embed ad in Streamlit app
-components.html(source_code, height=600)
+components.html(source_code)
 
 st.title("Sofascore Tactical Analysis")
 st.write(datetime.datetime.today())

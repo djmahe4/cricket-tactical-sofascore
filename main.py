@@ -4,6 +4,17 @@ from defs import *
 import requests
 from test import main
 import os
+import streamlit.components.v1 as components
+
+# Read AdSense HTML file
+source_code="
+<html>
+<meta name="google-adsense-account" content="ca-pub-4547808875113951">
+</html>
+"
+
+# Embed ad in Streamlit app
+components.html(source_code, height=600)
 
 st.title("Sofascore Tactical Analysis")
 st.write(datetime.datetime.today())

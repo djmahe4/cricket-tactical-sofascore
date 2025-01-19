@@ -7,17 +7,19 @@ import os
 import streamlit.components.v1 as components
 
 # Read AdSense HTML file
-source_code="
-<html>
-<head>
-<meta name="google-adsense-account" content="ca-pub-4547808875113951">
-</head>
-</html>
-"
-
-# Embed ad in Streamlit app
-components.html(source_code)
-
+source_code = """
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4547808875113951"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-4547808875113951"
+     data-ad-slot="1234567890"
+     data-ad-format="auto"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+"""
+components.html(source_code, height=300)
 st.title("Sofascore Tactical Analysis")
 st.write(datetime.datetime.today())
 

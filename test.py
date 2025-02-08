@@ -10,7 +10,7 @@ import numpy as np
 from matplotlib.patches import Circle
 import matplotlib.animation as animation
 import streamlit as st
-from icecream import ic
+#from icecream import ic
 #import os
 #os.environ["PATH"] += os.pathsep + r'C:\ffmpeg-master-latest-win64-gpl\bin'
 
@@ -54,14 +54,14 @@ def determine_match_format(data):
         return "Unknown format"
 def scraper(url):
     #url =
-    ic(url)
+    #ic(url)
     parsed = urlparse(url)
     conn = http.client.HTTPSConnection(parsed.netloc)
     conn.request("GET", parsed.path)
     res = conn.getresponse()
     data = res.read()
     details = json.loads(data.decode("utf-8"))
-    ic(details.keys())
+    #ic(details.keys())
     return details
 def opp_team_venue(mid,pid):
     #if not st.session_state.details:
@@ -75,11 +75,7 @@ def opp_team_venue(mid,pid):
     #a_id=details['event']['awayTeam']['id']
     venue=st.session_state.details['event']['venue']['name']
     st.session_state.venue=venue
-    ic(st.session_state.h_name,st.session_state.a_name,st.session_state.venue)
-    try:
-        ic(st.session_state.p_details.keys())
-    except:
-        ic("None")
+    #ic(st.session_state.h_name,st.session_state.a_name,st.session_state.venue)
     #if not st.session_state.p_details:
     p_details=scraper(f"https://www.sofascore.com/api/v1/event/{mid}/lineups")
         #st.write(p_details['home']['players'])
@@ -95,9 +91,9 @@ def opp_team_venue(mid,pid):
             if st.session_state.pid==player['player']['id']:
                 st.write("WTH")
                 #ic(player['name'])
-                ic(team)
+                #ic(team)
                 if team == 'home':
-                    ic(st.session_state.a_name,st.session_state.venue)
+                    #ic(st.session_state.a_name,st.session_state.venue)
                     st.write(st.session_state.a_name,st.session_state.venue)
                     #st.session_state.p_details=None
                     #st.session_state.details=None
@@ -105,7 +101,7 @@ def opp_team_venue(mid,pid):
                     return
                     #return st.session_state.a_name,st.session_state.venue
                 else:
-                    ic(st.session_state.h_name,st.session_state.venue)
+                    #ic(st.session_state.h_name,st.session_state.venue)
                     st.write(st.session_state.h_name,st.session_state.venue)
                     #st.session_state.p_details = None
                     #st.session_state.details = None
@@ -349,7 +345,7 @@ def bowl():
             for j in st.session_state.matches:
                 try:
                     st.write(j)
-                    ic(j)
+                    #ic(j)
                     jaba=append_ball_data(j, st.session_state.pid)
 
                 except KeyError:

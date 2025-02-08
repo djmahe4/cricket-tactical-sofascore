@@ -22,7 +22,7 @@ def reset():
     st.session_state.p_details=None
     st.session_state.mformat = None
     st.session_state.recent_got = None
-    st.session_state.matches = None
+    st.session_state.matches = []
     st.session_state.incidents = []
     st.session_state.det = None
     st.session_state.incidents2 = []

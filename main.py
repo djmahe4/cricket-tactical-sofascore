@@ -13,29 +13,17 @@ def reset():
     st.session_state.mformat = None
     st.session_state.recent_got = None
     st.session_state.matches = None
-    st.session_state.incidents = None
+    st.session_state.incidents = []
     st.session_state.det = None
-    st.session_state.incidents2 = None
+    st.session_state.incidents2 = []
     st.session_state.det2 = None
     st.session_state.switch = False
     st.session_state.nmat=None
+    st.success("Reset Sucesss")
+    st.rerun()
 st.title("Sofascore Tactical Analysis")
 st.write(datetime.datetime.today())
-if st.button("Reset"):
-    st.session_state.match_selected = False
-    st.session_state.mid = None
-    st.session_state.choose_side = None
-    st.session_state.players = None
-    st.session_state.pid = None
-    st.session_state.mformat = None
-    st.session_state.recent_got = None
-    st.session_state.matches = None
-    st.session_state.incidents = None
-    st.session_state.det = None
-    st.session_state.incidents2 = None
-    st.session_state.det2 = None
-    st.session_state.switch = False
-    st.rerun()
+
 # Define a button to start the analysis after choices are made
 if 'match_selected' not in st.session_state:
     st.session_state.match_selected = False
@@ -46,12 +34,13 @@ if 'match_selected' not in st.session_state:
     st.session_state.mformat= None
     st.session_state.recent_got=None
     st.session_state.matches=None
-    st.session_state.incidents=None
+    st.session_state.incidents=[]
     st.session_state.det=None
-    st.session_state.incidents2 = None
+    st.session_state.incidents2 = []
     st.session_state.det2 = None
     st.session_state.switch=False
-
+if st.button("Reset"):
+    reset()
 if st.button("Start"):
     contents = init()  # Only calls match_id_init once
     choices = contents

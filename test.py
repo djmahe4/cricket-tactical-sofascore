@@ -51,6 +51,33 @@ def determine_match_format(data):
        return "ODI"
     else:
         return "Unknown format"
+def opp_team_venue(mid,pid):
+    url = f"https://www.sofascore.com/api/v1/event/{mid}"
+    parsed = urlparse(url)
+    conn = http.client.HTTPSConnection(parsed.netloc)
+    conn.request("GET", parsed.path)
+    res = conn.getresponse()
+    data = res.read()
+    details = json.loads(data.decode("utf-8"))
+    h_name=details['event']['homeTeam']['name']
+    h_id=details['event']['homeTeam']['id']
+    a_name=details['event']['awayTeam']['name']
+    a_id=details['event']['awayTeam']['id']
+    venue=details['event']['venue']['name']
+    url = f"https://www.sofascore.com/api/v1/event/{mid}/lineups"
+    parsed = urlparse(url)
+    conn = http.client.HTTPSConnection(parsed.netloc)
+    conn.request("GET", parsed.path)
+    res = conn.getresponse()
+    data = res.read()
+    p_details = json.loads(data.decode("utf-8"))
+    for team in ['home','away']:
+        for player in p_details[team]['players']:
+            if pid==player['id']:
+                if h_id == player['teamId']:
+                    return a_name,venue
+                elif a_id == player['teamId']:
+                    return h_name,venue
 def get_matches(pid,matches=[], format="T20", ind=0):
   #if matches is None:
     #matches = []
@@ -137,6 +164,7 @@ def create_ball_animation(det,role):
 
     # Create a Text object for the title *outside* the update function
     title_text = ax1.text(0.02, 1.05, "", transform=ax1.transAxes, fontsize=12, ha='left', va='top')
+    stad_text = ax1.text(0.04, 1.15, "", transform=ax1.transAxes, fontsize=14, ha='left', va='top')
     batters=[]
     def update(frame):
         #ax1.clear()  # No longer needed to clear the whole axes
@@ -153,7 +181,9 @@ def create_ball_animation(det,role):
         color = color_map.get(runs)
 
         ax1.plot([0, x_end], [0, y_end], color=color, linewidth=2)
-
+        venue_name = det[role]['venue'][frame]
+        opp_name = det[role]['opp'][frame]
+        stad_text.set_text(f"{venue_name} (vs {opp_name})")
         # Update the text of the title object
         title_text.set_text(f"{batsman_name} ({batsman_type})")
         try:
@@ -208,7 +238,9 @@ def bowler_ball_by_ball(incidents):
                 "angle": [],
                 "batsman": [],
                 "wicket": [],
-                "zone": []
+                "zone": [],
+                "opp":[],
+                "venue":[]
             }
         # Debugging output
         # print("Bowl Detail:", j.get('bowlDetail'))
@@ -221,6 +253,8 @@ def bowler_ball_by_ball(incidents):
         try:
             det[batter_type]["x"].append(incident['ballDetails']['pitchHit']['x'])
             det[batter_type]["y"].append(incident['ballDetails']['pitchHit']['y'])
+            det[batter_type]["opp"].append(incident['opp'])
+            det[batter_type]["venue"].append(incident['venue'])
             det[batter_type]["length"].append(incident.get('length', 0))
             det[batter_type]["zone"].append(incident.get('zone', ""))
             det[batter_type]["angle"].append(incident.get('angle', 0))
@@ -234,8 +268,10 @@ def bowler_ball_by_ball(incidents):
         except KeyError:
             continue
     return det
+#@st.cache_data
 def append_ball_data(mid,pid,incidents=[]):
     #incidents=[]
+    info=opp_team_venue(mid,pid)
     url = f"https://www.sofascore.com/api/v1/event/{mid}/incidents"
     parsed = urlparse(url)
     conn = http.client.HTTPSConnection(parsed.netloc)
@@ -245,6 +281,8 @@ def append_ball_data(mid,pid,incidents=[]):
     jdata = json.loads(data.decode("utf-8"))['incidents']
     for i in jdata:
         if i["bowler"]["id"] == pid:
+            i['opp'] = info[0]
+            i['venue'] = info[1]
             incidents.append(i)
     return incidents
 

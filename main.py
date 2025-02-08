@@ -4,6 +4,21 @@ from defs import *
 import requests
 from test import main
 
+def reset():
+    st.session_state.match_selected = False
+    st.session_state.mid = None
+    st.session_state.choose_side = None
+    st.session_state.players = None
+    st.session_state.pid = None
+    st.session_state.mformat = None
+    st.session_state.recent_got = None
+    st.session_state.matches = None
+    st.session_state.incidents = None
+    st.session_state.det = None
+    st.session_state.incidents2 = None
+    st.session_state.det2 = None
+    st.session_state.switch = False
+    st.session_state.nmat=None
 st.title("Sofascore Tactical Analysis")
 st.write(datetime.datetime.today())
 
@@ -42,7 +57,7 @@ if st.session_state.match_selected:
         st.session_state.choose_side=side
 if st.session_state.choose_side:
     tid=requests.get(f"https://www.sofascore.com/api/v1/event/{st.session_state.mid}").json()['event'][st.session_state.choose_side]['id']
-    players={x["player"]['name']:x["player"]['id'] for x in requests.get("https://www.sofascore.com/api/v1/team/187735/players").json()['players']}
+    players={x["player"]['name']:x["player"]['id'] for x in requests.get(f"https://www.sofascore.com/api/v1/team/{tid}/players").json()['players']}
     st.session_state.players=players
     player = st.selectbox("Players", list(st.session_state.players.keys()))
     pid = st.session_state.players[player]
@@ -63,8 +78,10 @@ if 'recent_got' in st.session_state and st.session_state.recent_got:
     #nmat=st.slider("Select number of matches",min_value=0,max_value=len(st.session_state.recent_got))
     st.success(f"Found data for {len(st.session_state.recent_got)} {st.session_state.mformat} matches")
     nmat=st.text_input(f"Enter an integer less than {len(st.session_state.recent_got)}")
+    st.session_state.nmat=nmat
+    st.write(st.session_state.nmat)
     if st.button("Done"):
-        st.session_state.matches=st.session_state.recent_got[:int(nmat)]
+        st.session_state.matches=st.session_state.recent_got[:st.session_state.nmat]
 if st.session_state.matches:
     on=st.toggle("Keep it on to analyse batting..")
     if on:
@@ -97,3 +114,17 @@ if st.session_state.det and st.session_state.switch ==False:
             st.video(video_bytes)
             video_file.close()
     st.success("Process Complete!!")
+if st.button("Reset"):
+    st.session_state.match_selected = False
+    st.session_state.mid = None
+    st.session_state.choose_side = None
+    st.session_state.players = None
+    st.session_state.pid = None
+    st.session_state.mformat = None
+    st.session_state.recent_got = None
+    st.session_state.matches = None
+    st.session_state.incidents = None
+    st.session_state.det = None
+    st.session_state.incidents2 = None
+    st.session_state.det2 = None
+    st.session_state.switch = False

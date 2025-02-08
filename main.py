@@ -111,7 +111,7 @@ if __name__=="__main__":
         st.session_state.vanue=None
         st.session_state.mformat = None
         st.session_state.recent_got = None
-        st.session_state.matches = None
+        st.session_state.matches = []
         st.session_state.incidents = []
         st.session_state.det = None
         st.session_state.incidents2 = []

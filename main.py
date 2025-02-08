@@ -4,31 +4,6 @@ from defs import *
 import requests
 from test import bowl
 
-def reset():
-    st.session_state.match_selected = False
-    st.session_state.mid = None
-    st.session_state.choose_side = None
-    st.session_state.players = None
-    st.session_state.pid = None
-    st.session_state.pname=None
-    st.session_state.info=None
-    st.session_state.details=None
-    st.session_state.p_details=None
-    st.session_state.mformat = None
-    st.session_state.recent_got = None
-    st.session_state.matches = None
-    st.session_state.incidents = []
-    st.session_state.det = None
-    st.session_state.incidents2 = []
-    st.session_state.det2 = None
-    st.session_state.switch = False
-    st.session_state.nmat=None
-    st.session_state.h_name = None
-    st.session_state.a_name = None
-    st.session_state.venue = None
-    st.success("Reset Sucesss")
-    st.rerun()
-
 
 
 def app():
@@ -87,7 +62,13 @@ def app():
                 st.page_link(st.Page(bowl))
 def bat():
     # incidents=[]
+    if st.session_state.matches==[]:
+        st.error("You havent choosen the player and matches!")
+        st.page_link(st.Page(app))
+        return
     with st.spinner("Filtering data.."):
+        if st.button("Reset"):
+            reset()
         for j in st.session_state.matches:
             try:
                 append_bat_data(j, st.session_state.pid)
@@ -95,7 +76,7 @@ def bat():
             except KeyError:
                 continue
     st.success("Filtering Success...")
-    st.write(st.session_state.incidents)
+    #st.write(st.session_state.incidents)
 
     if st.session_state.incidents :
         with st.spinner("Extracting ball by ball data"):
@@ -106,11 +87,11 @@ def bat():
         for role in st.session_state.det:
             with st.spinner(f"Performance analysis vs {role}"):
                 st.markdown(f"# vs {role}")
-                file=create_bat_animation(det,role)
-                video_file = open(file, 'rb')
-                video_bytes = video_file.read()
-                st.video(video_bytes)
-                video_file.close()
+                create_bat_animation(det,role)
+                #video_file = open(file, 'rb')
+                #video_bytes = video_file.read()
+                #st.video(video_bytes)
+                #video_file.close()
         st.success("Process Complete!!")
 if __name__=="__main__":
     # Define a button to start the analysis after choices are made

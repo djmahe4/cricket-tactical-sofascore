@@ -10,6 +10,30 @@ from matplotlib.animation import FuncAnimation,PillowWriter
 import streamlit as st
 import imageio
 import tempfile
+def reset():
+    st.session_state.match_selected = False
+    st.session_state.mid = None
+    st.session_state.choose_side = None
+    st.session_state.players = None
+    st.session_state.pid = None
+    st.session_state.pname=None
+    st.session_state.info=None
+    st.session_state.details=None
+    st.session_state.p_details=None
+    st.session_state.mformat = None
+    st.session_state.recent_got = None
+    st.session_state.matches = None
+    st.session_state.incidents = []
+    st.session_state.det = None
+    st.session_state.incidents2 = []
+    st.session_state.det2 = None
+    st.session_state.switch = False
+    st.session_state.nmat=None
+    st.session_state.h_name = None
+    st.session_state.a_name = None
+    st.session_state.venue = None
+    st.success("Reset Sucesss")
+    st.rerun()
 import os
 #os.environ["PATH"] += os.pathsep + r'C:\ffmpeg-master-latest-win64-gpl\bin'
 def scraper(url):

@@ -12,9 +12,34 @@ from matplotlib.animation import FuncAnimation,PillowWriter
 import streamlit as st
 import imageio
 import tempfile
+#from main import app
 #from icecream import ic
 #import os
 #os.environ["PATH"] += os.pathsep + r'C:\ffmpeg-master-latest-win64-gpl\bin'
+def reset():
+    st.session_state.match_selected = False
+    st.session_state.mid = None
+    st.session_state.choose_side = None
+    st.session_state.players = None
+    st.session_state.pid = None
+    st.session_state.pname=None
+    st.session_state.info=None
+    st.session_state.details=None
+    st.session_state.p_details=None
+    st.session_state.mformat = None
+    st.session_state.recent_got = None
+    st.session_state.matches = None
+    st.session_state.incidents = []
+    st.session_state.det = None
+    st.session_state.incidents2 = []
+    st.session_state.det2 = None
+    st.session_state.switch = False
+    st.session_state.nmat=None
+    st.session_state.h_name = None
+    st.session_state.a_name = None
+    st.session_state.venue = None
+    st.success("Reset Sucesss")
+    st.rerun()
 def converter(gif_path):
     #os.popen("pip install imageio[ffmpeg]")
     #imageio.plugins.ffmpeg.download()
@@ -349,8 +374,14 @@ def append_ball_data(mid,pid):
 def bowl():
     # recent = get_matches(786470, format="T20")[:10]
     # incidents = []
-    if st.session_state.matches!=[]:
-        st.write(st.session_state.matches)
+    if st.session_state.matches==[]:
+        st.warning("Click on Setup option")
+        st.error("You havent choosen the player and matches!")
+        return
+    else:
+        if st.button("Reset"):
+            reset()
+        #st.write(st.session_state.matches)
         with st.spinner("Filtering data.."):
             for j in st.session_state.matches:
                 try:
@@ -378,9 +409,9 @@ def bowl():
         for role in st.session_state.det2:
             with st.spinner(f"Performance analysis vs {role}"):
                 st.markdown(f"# vs {role}")
-                file = create_ball_animation(det, role)
-                video_file = open(file, 'rb')
-                video_bytes = video_file.read()
-                st.video(video_bytes)
+                create_ball_animation(det, role)
+                #video_file = open(file, 'rb')
+                #video_bytes = video_file.read()
+                ##st.video(video_bytes)
                 video_file.close()
         st.success("Process Complete!!")

@@ -87,9 +87,9 @@ def app():
 def bat():
     # incidents=[]
     with st.spinner("Filtering data.."):
-        for i in st.session_state.matches:
+        for j in st.session_state.matches:
             try:
-                append_bat_data(i, st.session_state.pid)
+                append_bat_data(j, st.session_state.pid)
                 # st.session_state.incidents = incidents
             except KeyError:
                 continue

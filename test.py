@@ -287,20 +287,20 @@ def append_ball_data(mid,pid):
     #return incidents
 
 def main():
-    if st.session_state.switch==True:
-        #recent = get_matches(786470, format="T20")[:10]
-        #incidents = []
+    # recent = get_matches(786470, format="T20")[:10]
+    # incidents = []
+    if st.session_state.incidents2==[]:
         with st.spinner("Filtering data.."):
-            for i in st.session_state.matches:
+            for j in st.session_state.matches:
                 try:
-                    append_ball_data(i, st.session_state.pid)
+                    append_ball_data(j, st.session_state.pid)
 
                 except KeyError:
                     continue
-        #st.session_state.incidents2 = incidents
+        # st.session_state.incidents2 = incidents
         st.write(st.session_state.incidents2)
         st.success("Filtering Success...")
-        print(st.session_state)
+    print(st.session_state)
     if st.session_state.incidents2:
         with st.spinner("Extracting ball by ball data"):
             det = bowler_ball_by_ball(st.session_state.incidents2)

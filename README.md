@@ -1,3 +1,3 @@
 # cricket-tactical-sofascore
 
-https://cricket-tactical-analysis-sofascore-test.streamlit.app/
+https://cricket-tactical-sofascore-test.streamlit.app/

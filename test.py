@@ -8,11 +8,44 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Circle
-import matplotlib.animation as animation
+from matplotlib.animation import FuncAnimation,PillowWriter
 import streamlit as st
+import imageio
+import tempfile
 #from icecream import ic
 #import os
 #os.environ["PATH"] += os.pathsep + r'C:\ffmpeg-master-latest-win64-gpl\bin'
+def converter(gif_path):
+    #os.popen("pip install imageio[ffmpeg]")
+    #imageio.plugins.ffmpeg.download()
+    try:
+        with open(gif_path, 'rb') as f:
+            st.write("Found GIF file:", gif_path)
+    except FileNotFoundError:
+        st.error("GIF file not found!")
+        return
+
+    try:
+        # Create a temporary file to save the converted video
+        with tempfile.NamedTemporaryFile(suffix=".mp4",prefix=gif_path[:-4]) as temp_file:
+            gif_reader = imageio.get_reader(gif_path, format='GIF')
+            fps = gif_reader.get_meta_data().get('fps', 1)  # Default to 1 FPS if metadata is missing
+
+            #st.write(f"Temporary file created: {temp_file.name}")
+
+            # Create a video writer for MP4 format
+            with imageio.get_writer(temp_file.name, format='mp4', fps=fps) as video_writer:
+                for frame in gif_reader:
+                    video_writer.append_data(frame)
+
+            st.success("Conversion successful!")
+            st.video(temp_file.name)
+
+            # Provide a download link for the converted MP4 file
+            with open(temp_file.name, "rb") as f:
+                st.download_button(label="Download MP4", data=f.read(), file_name=f"{gif_path[:-4]}.mp4", mime="video/mp4")
+    except Exception as e:
+        st.error(f"An error occurred during conversion: {e}")
 
 def determine_match_format(data):
     """Determines the cricket match format based on innings data.
@@ -89,12 +122,12 @@ def opp_team_venue(mid,pid):
         for player in st.session_state.p_details[team]['players']:
             #ic(player['name'])
             if st.session_state.pid==player['player']['id']:
-                st.write("WTH")
+                #st.write("WTH")
                 #ic(player['name'])
                 #ic(team)
                 if team == 'home':
                     #ic(st.session_state.a_name,st.session_state.venue)
-                    st.write(st.session_state.a_name,st.session_state.venue)
+                    #st.write(st.session_state.a_name,st.session_state.venue)
                     #st.session_state.p_details=None
                     #st.session_state.details=None
                     st.session_state.h_name=None
@@ -102,7 +135,7 @@ def opp_team_venue(mid,pid):
                     #return st.session_state.a_name,st.session_state.venue
                 else:
                     #ic(st.session_state.h_name,st.session_state.venue)
-                    st.write(st.session_state.h_name,st.session_state.venue)
+                    #st.write(st.session_state.h_name,st.session_state.venue)
                     #st.session_state.p_details = None
                     #st.session_state.details = None
                     st.session_state.a_name=None
@@ -259,9 +292,11 @@ def create_ball_animation(det,role):
             ax2.invert_yaxis()
             ax2.set_title("Wagon wheel (left) and Pitch plot (right)")
 
-    ani = animation.FuncAnimation(fig, update, frames=len(det[role]['runs']), repeat=False)
-    ani.save(f'cricket_animation_with_{role}.mp4', writer='ffmpeg', fps=1)
-    return f'cricket_animation_with_{role}.mp4'
+    ani = FuncAnimation(fig, update, frames=len(det[role]['runs']), repeat=False)
+    gif_writer = PillowWriter(fps=1)
+    ani.save(f'{st.session_state.player_name}_bowl_animation_with_{role}.gif', writer=gif_writer)
+    converter(f'{st.session_state.player_name}_bowl_animation_with_{role}.gif')
+    return f'{st.session_state.player_name}_bowl_animation_with_{role}.mp4'
 def bowler_ball_by_ball(incidents):
     det = {}
     for incident in incidents[::-1]:
@@ -330,7 +365,7 @@ def append_ball_data(mid,pid):
             #st.write(info)
             i['opp'] = st.session_state.h_name if not None else st.session_state.a_name
             i['venue'] = st.session_state.venue
-            st.write(i)
+            #st.write(i)
             #ic(i)
             #st.session_state.info=None
             st.session_state.incidents2.append(i)
@@ -351,13 +386,13 @@ def bowl():
                 except KeyError:
                     continue
         # st.session_state.incidents2 = incidents
-        st.write(st.session_state.incidents2)
+        #st.write(st.session_state.incidents2)
         st.success("Filtering Success...")
         #ic(st.session_state.p_details,st.session_state.details)
-        st.write(st.session_state.info)
+        #st.write(st.session_state.info)
         #st.session_state.p_details=None
         #st.session_state.details=None
-        st.write(st.session_state)
+        #st.write(st.session_state)
     #print(st.session_state)
     if st.session_state.incidents2:
         with st.spinner("Extracting ball by ball data"):

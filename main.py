@@ -66,33 +66,34 @@ def bat():
         st.error("You havent choosen the player and matches!")
         st.page_link(st.Page(app))
         return
-    with st.spinner("Filtering data.."):
+    else:
         if st.button("Reset"):
             reset()
-        for j in st.session_state.matches:
-            try:
-                append_bat_data(j, st.session_state.pid)
-                # st.session_state.incidents = incidents
-            except KeyError:
-                continue
-    st.success("Filtering Success...")
-    #st.write(st.session_state.incidents)
+        with st.spinner("Filtering data.."):
+            for j in st.session_state.matches:
+                try:
+                    append_bat_data(j, st.session_state.pid)
+                    # st.session_state.incidents = incidents
+                except KeyError:
+                    continue
+        st.success("Filtering Success...")
+        #st.write(st.session_state.incidents)
 
-    if st.session_state.incidents :
-        with st.spinner("Extracting ball by ball data"):
-            det=batter_ball_by_ball(st.session_state.incidents)
-        st.success("Extraction successful")
-        st.session_state.det=det
-    if st.session_state.det :
-        for role in st.session_state.det:
-            with st.spinner(f"Performance analysis vs {role}"):
-                st.markdown(f"# vs {role}")
-                create_bat_animation(det,role)
-                #video_file = open(file, 'rb')
-                #video_bytes = video_file.read()
-                #st.video(video_bytes)
-                #video_file.close()
-        st.success("Process Complete!!")
+        if st.session_state.incidents :
+            with st.spinner("Extracting ball by ball data"):
+                det=batter_ball_by_ball(st.session_state.incidents)
+            st.success("Extraction successful")
+            st.session_state.det=det
+        if st.session_state.det :
+            for role in st.session_state.det:
+                with st.spinner(f"Performance analysis vs {role}"):
+                    st.markdown(f"# vs {role}")
+                    create_bat_animation(det,role)
+                    #video_file = open(file, 'rb')
+                    #video_bytes = video_file.read()
+                    #st.video(video_bytes)
+                    #video_file.close()
+            st.success("Process Complete!!")
 if __name__=="__main__":
     # Define a button to start the analysis after choices are made
     if 'match_selected' not in st.session_state:

@@ -412,6 +412,6 @@ def bowl():
                 create_ball_animation(det, role)
                 #video_file = open(file, 'rb')
                 #video_bytes = video_file.read()
-                ##st.video(video_bytes)
-                video_file.close()
+                #st.video(video_bytes)
+                #video_file.close()
         st.success("Process Complete!!")

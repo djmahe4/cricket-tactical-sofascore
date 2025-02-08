@@ -31,7 +31,6 @@ if 'match_selected' not in st.session_state:
     st.session_state.nmat=None
     st.session_state.info=None
     st.session_state.ovr={}
-    st.session_state.df=None
 
 def reset():
     st.session_state.match_selected = False
@@ -102,7 +101,7 @@ if 'recent_got' in st.session_state and st.session_state.recent_got:
     st.write(st.session_state.nmat)
     if st.button("Done"):
         st.session_state.matches = st.session_state.recent_got[:int(st.session_state.nmat)]
-    #st.write(st.session_state.matches)
+    st.write(st.session_state.matches)
 if st.session_state.matches:
     on=st.toggle("Keep it on to analyse batting..")
     if on:
@@ -110,7 +109,7 @@ if st.session_state.matches:
         with st.spinner("Filtering data.."):
             for i in st.session_state.matches:
                 try:
-                    incidents=append_bat_data(i,st.session_state.pid,st.session_state.incidents)
+                    incidents=append_bat_data(i,st.session_state.pid,incidents)
                     st.session_state.incidents = incidents
                 except KeyError as e:
                     st.error(e)

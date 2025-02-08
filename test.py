@@ -1,5 +1,4 @@
 #Bowler perspective Analysis
-
 #from defs import *
 import datetime,requests
 #from defs import get_matches
@@ -13,7 +12,6 @@ from matplotlib.patches import Circle
 import matplotlib.animation as animation
 import streamlit as st
 from matplotlib.animation import FuncAnimation,PillowWriter
-import streamlit as st
 import imageio
 import tempfile
 import os
@@ -88,29 +86,38 @@ def determine_match_format(data):
        return "ODI"
     else:
         return "Unknown format"
-def get_matches(pid,matches=[], format="T20", ind=0):
-  #if matches is None:
-    #matches = []
-  url = f"https://www.sofascore.com/api/v1/player/{pid}/events/last/{ind}"
-  parsed = urlparse(url)
-  conn = http.client.HTTPSConnection(parsed.netloc)
-  conn.request("GET", parsed.path)
-  res = conn.getresponse()
-  data = res.read()
-  jdata = json.loads(data.decode("utf-8"))
-  #print(jdata['events'][0])
-  try:
-    for event in jdata['events']:
-      ans=determine_match_format(event)
-      print(ans)
-      if format == ans:
-        matches.append(event['id'])
-        print(event['id'])
-  except KeyError:
-    return matches
-  if jdata.get('hasNextPage'):
-    get_matches(pid,matches, format, ind + 1)
-  return matches
+def opp_team_venue(mid,pid):
+    url = f"https://www.sofascore.com/api/v1/event/{mid}"
+    parsed = urlparse(url)
+    conn = http.client.HTTPSConnection(parsed.netloc)
+    conn.request("GET", parsed.path)
+    res = conn.getresponse()
+    data = res.read()
+    details = json.loads(data.decode("utf-8"))
+    h_name=details['event']['homeTeam']['name']
+    h_id=details['event']['homeTeam']['id']
+    a_name=details['event']['awayTeam']['name']
+    a_id=details['event']['awayTeam']['id']
+    venue=details['event']['venue']['name']
+    url = f"https://www.sofascore.com/api/v1/event/{mid}/lineups"
+    parsed = urlparse(url)
+    conn = http.client.HTTPSConnection(parsed.netloc)
+    conn.request("GET", parsed.path)
+    res = conn.getresponse()
+    data = res.read()
+    p_details = json.loads(data.decode("utf-8"))
+    #st.write(a_id,a_name,h_name,h_id,venue)
+    for team in ['home','away']:
+        for player in p_details[team]['players']:
+            if pid==player['player']['id']:
+                if team == 'home':
+                    #st.write(a_name,venue)
+                    return a_name,venue
+                else:
+                    #st.write(h_name,venue)
+                    return h_name,venue
+
+    #return None
 def analyze_batting_stats(det, batting_type, player_slug):
     """
     Analyzes a bowler's stats against a specific batsman.
@@ -164,7 +171,32 @@ def analyze_batting_stats(det, batting_type, player_slug):
         df[f'wickets_in_{zone}'] = df.loc[df['zone'] == zone, 'runs'].apply(lambda x: 1 if x == 'W' else 0).sum()
         df[f'runs_in_{zone}'] = df.loc[df['zone']==zone,'runs'].apply(lambda x: 0 if x=='W' else x).sum()
     df['wickets']=df['wicket'].apply(lambda x: 1 if x!='' else 0).sum()
+    df.drop(['is_boundary','wicket','dots','zone','x','y','length'])
     return df
+def get_matches(pid,matches=[], format="T20", ind=0):
+  #if matches is None:
+    #matches = []
+  url = f"https://www.sofascore.com/api/v1/player/{pid}/events/last/{ind}"
+  parsed = urlparse(url)
+  conn = http.client.HTTPSConnection(parsed.netloc)
+  conn.request("GET", parsed.path)
+  res = conn.getresponse()
+  data = res.read()
+  jdata = json.loads(data.decode("utf-8"))
+  #print(jdata['events'][0])
+  try:
+    for event in jdata['events']:
+      ans=determine_match_format(event)
+      print(ans)
+      if format == ans:
+        matches.append(event['id'])
+        print(event['id'])
+  except KeyError:
+    return matches
+  if jdata.get('hasNextPage'):
+    get_matches(pid,matches, format, ind + 1)
+  return matches
+
 def create_ball_animation(det,role):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
 
@@ -174,6 +206,7 @@ def create_ball_animation(det,role):
 
     # Create a Text object for the title *outside* the update function
     title_text = ax1.text(0.02, 1.05, "", transform=ax1.transAxes, fontsize=12, ha='left', va='top')
+    stad_text = ax1.text(0.04, 1.15, "", transform=ax1.transAxes, fontsize=14, ha='left', va='top')
     batters=[]
     def update(frame):
         #ax1.clear()  # No longer needed to clear the whole axes
@@ -190,17 +223,21 @@ def create_ball_animation(det,role):
         color = color_map.get(runs)
 
         ax1.plot([0, x_end], [0, y_end], color=color, linewidth=2)
-
+        venue_name = det[role]['venue'][frame]
+        opp_name = det[role]['opp'][frame]
+        stad_text.set_text(f"{venue_name} (vs {opp_name})")
         # Update the text of the title object
         title_text.set_text(f"{batsman_name} ({batsman_type})")
         try:
           if batsman_name != det[role]['batsman'][frame+1] and batsman_name not in batters:
               #ax1.clear()
               df =analyze_batting_stats(det, role, det[role]['batsman'][frame])
+              #st.session_state.df=mdf
               last_row = df.iloc[-1]
               print(f"{batsman_name} ({batsman_type})")
-              print(last_row)
+              #print(last_row)
               st.markdown(f"## {batsman_name} ({batsman_type})")
+              #visualize_bowler(st.session_state.df[1],st.session_state.df[0])
               st.dataframe(last_row.transpose())
               batters.append(batsman_name)
         except:
@@ -231,10 +268,9 @@ def create_ball_animation(det,role):
     #html = ani.to_jshtml()
     #st.components.v1.html(html, height=500)
     gif_writer = PillowWriter(fps=1)
-    ani.save(f'cricket_animation_with_{role}.gif', writer=gif_writer)
-    converter(f'cricket_animation_with_{role}.gif')
-    #ani.save(f'cricket_animation_with_{role}.mp4', writer='ffmpeg', fps=1) Dont uncomment
-    return f'cricket_animation_with_{role}.mp4'
+    ani.save(f'{st.session_state.player_name}_bowl_animation_with_{role}.gif', writer=gif_writer)
+    converter(f'{st.session_state.player_name}_bowl_animation_with_{role}.gif')
+    return f'{st.session_state.player_name}_bowl_animation_with_{role}.mp4'
 def bowler_ball_by_ball(incidents):
     det = {}
     for incident in incidents[::-1]:
@@ -250,7 +286,9 @@ def bowler_ball_by_ball(incidents):
                 "angle": [],
                 "batsman": [],
                 "wicket": [],
-                "zone": []
+                "zone": [],
+                "opp":[],
+                "venue":[]
             }
         # Debugging output
         # print("Bowl Detail:", j.get('bowlDetail'))
@@ -263,6 +301,8 @@ def bowler_ball_by_ball(incidents):
         try:
             det[batter_type]["x"].append(incident['ballDetails']['pitchHit']['x'])
             det[batter_type]["y"].append(incident['ballDetails']['pitchHit']['y'])
+            det[batter_type]["opp"].append(incident['opp'])
+            det[batter_type]["venue"].append(incident['venue'])
             det[batter_type]["length"].append(incident.get('length', 0))
             det[batter_type]["zone"].append(incident.get('zone', ""))
             det[batter_type]["angle"].append(incident.get('angle', 0))
@@ -276,7 +316,10 @@ def bowler_ball_by_ball(incidents):
         except KeyError:
             continue
     return det
+#@st.cache_data
 def append_ball_data(mid,pid,incidents=[]):
+    info = opp_team_venue(mid, pid)
+    #st.write(mid,pid)
     #incidents=[]
     url = f"https://www.sofascore.com/api/v1/event/{mid}/incidents"
     parsed = urlparse(url)
@@ -287,8 +330,10 @@ def append_ball_data(mid,pid,incidents=[]):
     jdata = json.loads(data.decode("utf-8"))['incidents']
     for i in jdata:
         if i["bowler"]["id"] == pid:
+            i['opp'] = info[0]
+            i['venue'] = info[1]
             incidents.append(i)
-            st.write(i)
+            #st.write(i)
     return incidents
 
 def main(st):
@@ -298,12 +343,14 @@ def main(st):
         with st.spinner("Filtering data.."):
             for i in st.session_state.matches:
                 try:
+                    #st.write(i, st.session_state.pid)
                     incidents = append_ball_data(i, st.session_state.pid, incidents)
+                    #st.write(incidents)
                 except KeyError:
                     continue
         st.session_state.incidents2 = incidents
+        #st.write(st.session_state.incidents2)
         st.success("Filtering Success...")
-        st.write(st.session_state.incidents2)
         print(st.session_state)
     if st.session_state.incidents2:
         with st.spinner("Extracting ball by ball data"):
@@ -314,6 +361,7 @@ def main(st):
         for role in st.session_state.det2:
             with st.spinner(f"Performance analysis vs {role}"):
                 st.markdown(f"# vs {role}")
+                #st.write(det)
                 create_ball_animation(det, role)
                 #file = create_ball_animation(det, role)
                 #video_file = open(file, 'rb')

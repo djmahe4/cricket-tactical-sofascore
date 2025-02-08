@@ -68,6 +68,7 @@ def opp_team_venue(mid,pid):
     #a_id=details['event']['awayTeam']['id']
     venue=details['event']['venue']['name']
     p_details=scraper(f"https://www.sofascore.com/api/v1/event/{mid}/lineups")
+    st.write(details,p_details)
     for team in ['home','away']:
         for player in p_details[team]['players']:
             if pid==player['id']:

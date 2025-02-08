@@ -2,7 +2,7 @@ import streamlit as st
 import datetime
 from defs import *
 import requests
-from test import main as bowl
+from test import bowl
 
 def reset():
     st.session_state.match_selected = False
@@ -88,9 +88,9 @@ def app():
             st.success("Great now choose any of Them!")
             ba,bo=st.columns(2)
             with ba:
-                st.page_link(st.Page(bat))
+                st.page_link(st.Page(bat,title="Bat"))
             with bo:
-                st.page_link(st.Page(bowl))
+                st.page_link(st.Page(bowl,title="Bowl"))
 def bat():
     # incidents=[]
     with st.spinner("Filtering data.."):

@@ -287,7 +287,7 @@ def append_ball_data(mid,pid):
             st.session_state.incidents2.append(i)
     #return incidents
 
-def main():
+def bowl():
     # recent = get_matches(786470, format="T20")[:10]
     # incidents = []
     if st.session_state.incidents2!=[]:

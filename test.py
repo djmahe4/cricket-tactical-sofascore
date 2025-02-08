@@ -274,7 +274,8 @@ def bowler_ball_by_ball(incidents):
 def append_ball_data(mid,pid):
     #incidents=[]
     info=opp_team_venue(mid,pid)
-    st.write(info)
+    st.session_state.info=info
+    st.write(st.session_state.info)
     url = f"https://www.sofascore.com/api/v1/event/{mid}/incidents"
     parsed = urlparse(url)
     conn = http.client.HTTPSConnection(parsed.netloc)
@@ -286,8 +287,8 @@ def append_ball_data(mid,pid):
         if i["bowler"]["id"] == pid:
             st.write(i)
             st.write(info)
-            i['opp'] = info[0]
-            i['venue'] = info[1]
+            i['opp'] = st.session_state.info[0]
+            i['venue'] = st.session_state.info[1]
             st.write(i)
             st.session_state.incidents2.append(i)
     #return incidents

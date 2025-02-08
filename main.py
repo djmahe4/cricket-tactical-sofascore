@@ -109,6 +109,7 @@ if __name__=="__main__":
     if 'match_selected' not in st.session_state:
         st.session_state.match_selected = False
         st.session_state.mid = None
+        st.session_state.info=None
         st.session_state.choose_side = None
         st.session_state.players = None
         st.session_state.pid = None

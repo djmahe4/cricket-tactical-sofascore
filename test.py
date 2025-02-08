@@ -108,48 +108,22 @@ def opp_team_venue(mid,pid):
     #a_id=details['event']['awayTeam']['id']
     venue=st.session_state.details['event']['venue']['name']
     st.session_state.venue=venue
-    #ic(st.session_state.h_name,st.session_state.a_name,st.session_state.venue)
-    #if not st.session_state.p_details:
     p_details=scraper(f"https://www.sofascore.com/api/v1/event/{mid}/lineups")
         #st.write(p_details['home']['players'])
     st.session_state.p_details=p_details
-    #ic(st.session_state.p_details)
-    #with open("dat.json",'w') as f:
-        #j=json.dumps(st.session_state.p_details,indent=2)
-        #f.write(j)
-    #st.write(details,p_details)
     for team in ['home','away']:
         for player in st.session_state.p_details[team]['players']:
             #ic(player['name'])
             if st.session_state.pid==player['player']['id']:
-                #st.write("WTH")
-                #ic(player['name'])
-                #ic(team)
                 if team == 'home':
-                    #ic(st.session_state.a_name,st.session_state.venue)
-                    #st.write(st.session_state.a_name,st.session_state.venue)
-                    #st.session_state.p_details=None
-                    #st.session_state.details=None
                     st.session_state.h_name=None
                     return
                     #return st.session_state.a_name,st.session_state.venue
                 else:
-                    #ic(st.session_state.h_name,st.session_state.venue)
-                    #st.write(st.session_state.h_name,st.session_state.venue)
-                    #st.session_state.p_details = None
-                    #st.session_state.details = None
                     st.session_state.a_name=None
                     return
-                    #return st.session_state.h_name,st.session_state.venue
-    #st.session_state.p_details = None
-    #st.session_state.details = None
-    #ic("")
-    #return ('','')
     st.session_state.a_name=''
     st.session_state.h_name=''
-    #st.session_state.p_details = None
-    #st.session_state.details = None
-    #return None
 def get_matches(pid,matches=[], format="T20", ind=0):
   #if matches is None:
     #matches = []
@@ -226,6 +200,7 @@ def analyze_batting_stats(det, batting_type, player_slug):
         df[f'wickets_in_{zone}'] = df.loc[df['zone'] == zone, 'runs'].apply(lambda x: 1 if x == 'W' else 0).sum()
         df[f'runs_in_{zone}'] = df.loc[df['zone']==zone,'runs'].apply(lambda x: 0 if x=='W' else x).sum()
     df['wickets']=df['wicket'].apply(lambda x: 1 if x!='' else 0).sum()
+    df.drop(['is_boundary', 'wicket', 'dots', 'zone', 'x', 'y', 'length', 'angle','runs'])
     return df
 def create_ball_animation(det,role):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
@@ -262,7 +237,7 @@ def create_ball_animation(det,role):
           if batsman_name != det[role]['batsman'][frame+1] and batsman_name not in batters:
               #ax1.clear()
               df =analyze_batting_stats(det, role, det[role]['batsman'][frame])
-              last_row = df.iloc[-1]
+              last_row = df.loc[:, df.iloc[-1] != 0].iloc[-1]
               print(f"{batsman_name} ({batsman_type})")
               print(last_row)
               st.markdown(f"## {batsman_name} ({batsman_type})")
@@ -294,9 +269,9 @@ def create_ball_animation(det,role):
 
     ani = FuncAnimation(fig, update, frames=len(det[role]['runs']), repeat=False)
     gif_writer = PillowWriter(fps=1)
-    ani.save(f'{st.session_state.player_name}_bowl_animation_with_{role}.gif', writer=gif_writer)
-    converter(f'{st.session_state.player_name}_bowl_animation_with_{role}.gif')
-    return f'{st.session_state.player_name}_bowl_animation_with_{role}.mp4'
+    ani.save(f'{st.session_state.pname}_bowl_animation_with_{role}.gif', writer=gif_writer)
+    converter(f'{st.session_state.pname}_bowl_animation_with_{role}.gif')
+    return f'{st.session_state.pname}_bowl_animation_with_{role}.mp4'
 def bowler_ball_by_ball(incidents):
     det = {}
     for incident in incidents[::-1]:

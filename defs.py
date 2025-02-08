@@ -6,10 +6,54 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Circle
-import matplotlib.animation as animation
+from matplotlib.animation import FuncAnimation,PillowWriter
 import streamlit as st
+import imageio
+import tempfile
 import os
 #os.environ["PATH"] += os.pathsep + r'C:\ffmpeg-master-latest-win64-gpl\bin'
+def scraper(url):
+    #url =
+    #ic(url)
+    parsed = urlparse(url)
+    conn = http.client.HTTPSConnection(parsed.netloc)
+    conn.request("GET", parsed.path)
+    res = conn.getresponse()
+    data = res.read()
+    details = json.loads(data.decode("utf-8"))
+    #ic(details.keys())
+    return details
+def converter(gif_path):
+    #os.popen("pip install imageio[ffmpeg]")
+    #imageio.plugins.ffmpeg.download()
+    try:
+        with open(gif_path, 'rb') as f:
+            st.write("Found GIF file:", gif_path)
+    except FileNotFoundError:
+        st.error("GIF file not found!")
+        return
+
+    try:
+        # Create a temporary file to save the converted video
+        with tempfile.NamedTemporaryFile(suffix=".mp4",prefix=gif_path[:-4]) as temp_file:
+            gif_reader = imageio.get_reader(gif_path, format='GIF')
+            fps = gif_reader.get_meta_data().get('fps', 1)  # Default to 1 FPS if metadata is missing
+
+            #st.write(f"Temporary file created: {temp_file.name}")
+
+            # Create a video writer for MP4 format
+            with imageio.get_writer(temp_file.name, format='mp4', fps=fps) as video_writer:
+                for frame in gif_reader:
+                    video_writer.append_data(frame)
+
+            st.success("Conversion successful!")
+            st.video(temp_file.name)
+
+            # Provide a download link for the converted MP4 file
+            with open(temp_file.name, "rb") as f:
+                st.download_button(label="Download MP4", data=f.read(), file_name=f"{gif_path[:-4]}.mp4", mime="video/mp4")
+    except Exception as e:
+        st.error(f"An error occurred during conversion: {e}")
 def init():
     # Get today's date
     today = datetime.date.today() # Format the date as YYYY-MM-DD
@@ -88,6 +132,7 @@ def analyze_bowling_stats(det, bowling_type, player_slug):
     for zone, count in zone_counts.items():
         df[f'runs_in_{zone}'] = df.loc[df['zone']==zone,'runs'].apply(lambda x: 0 if x=='W' else x).sum()
     df['wickets']=df['wicket'].apply(lambda x: 1 if x!='' else 0).sum()
+    df.drop(['is_boundary', 'dots', 'runs', 'zone', 'x', 'y', 'length', 'angle'])
     return df
 
 def get_matches(pid,matches=[], format="T20", ind=0):
@@ -153,50 +198,46 @@ def determine_match_format(data):
     else:
         return "Unknown format"
 def opp_team_venue(mid,pid):
-    url = f"https://www.sofascore.com/api/v1/event/{mid}"
-    parsed = urlparse(url)
-    conn = http.client.HTTPSConnection(parsed.netloc)
-    conn.request("GET", parsed.path)
-    res = conn.getresponse()
-    data = res.read()
-    details = json.loads(data.decode("utf-8"))
-    h_name=details['event']['homeTeam']['name']
+    details = scraper(f"https://www.sofascore.com/api/v1/event/{mid}")
+    st.session_state.details = details
+    h_name = st.session_state.details['event']['homeTeam']['name']
+    st.session_state.h_name = h_name
     #h_id=details['event']['homeTeam']['id']
-    a_name=details['event']['awayTeam']['name']
-    #a_id=details['event']['awayTeam']['id']
-    venue=details['event']['venue']['name']
-    url = f"https://www.sofascore.com/api/v1/event/{mid}/lineups"
-    parsed = urlparse(url)
-    conn = http.client.HTTPSConnection(parsed.netloc)
-    conn.request("GET", parsed.path)
-    res = conn.getresponse()
-    data = res.read()
-    p_details = json.loads(data.decode("utf-8"))
+    a_name = st.session_state.details['event']['awayTeam']['name']
+    st.session_state.a_name = a_name
+    # a_id=details['event']['awayTeam']['id']
+    venue = st.session_state.details['event']['venue']['name']
+    st.session_state.venue = venue
+    # ic(st.session_state.h_name,st.session_state.a_name,st.session_state.venue)
+    # if not st.session_state.p_details:
+    p_details = scraper(f"https://www.sofascore.com/api/v1/event/{mid}/lineups")
+    # st.write(p_details['home']['players'])
+    st.session_state.p_details = p_details
     for team in ['home','away']:
-        for player in p_details[team]['players']:
-            if pid==player['id']:
+        for player in st.session_state.p_details[team]['players']:
+            #ic(player['name'])
+            if st.session_state.pid==player['player']['id']:
                 if team == 'home':
-                    #st.write(a_name,venue)
-                    return a_name,venue
+                    st.session_state.h_name=None
+                    return
                 else:
-                    #st.write(h_name,venue)
-                    return h_name,venue
+                    st.session_state.a_name=None
+                    return
+    st.session_state.a_name = ''
+    st.session_state.h_name = ''
 #@st.cache_data
 def append_bat_data(mid,pid):
-    info = opp_team_venue(mid, pid)
+    opp_team_venue(mid, pid)
     #st.session_state.info=info
     #incidents=[]
-    url = f"https://www.sofascore.com/api/v1/event/{mid}/incidents"
-    parsed = urlparse(url)
-    conn = http.client.HTTPSConnection(parsed.netloc)
-    conn.request("GET", parsed.path)
-    res = conn.getresponse()
-    data = res.read()
-    jdata = json.loads(data.decode("utf-8"))['incidents']
-    for i in jdata:
+    try:
+        jdata1 = scraper(f"https://www.sofascore.com/api/v1/event/{mid}/incidents")
+    except json.JSONDecodeError:
+        return
+    for i in jdata1['incidents']:
         if i["batsman"]["id"] == pid:
-            i['opp']=info[0]
-            i['venue']=info[1]
+            i['opp'] = st.session_state.h_name if not None else st.session_state.a_name
+            i['venue'] = st.session_state.venue
             st.session_state.incidents.append(i)
     #return incidents
 def batter_ball_by_ball(incidents):
@@ -281,7 +322,7 @@ def create_bat_animation(det,role):
         try:
           if bowler_name != det[role]['bowler'][frame+1]:
               df =analyze_bowling_stats(det, role, det[role]['bowler'][frame])
-              last_row = df.iloc[-1]
+              last_row = df.loc[:, df.iloc[-1] != 0].iloc[-1]
               print(f"{bowler_name} ({bowler_type})")
               print(last_row)
               st.markdown(f"## {bowler_name} ({bowler_type})")
@@ -310,6 +351,8 @@ def create_bat_animation(det,role):
             ax2.invert_yaxis()
             ax2.set_title("Wagon wheel (left) and Pitch plot (right)")
 
-    ani = animation.FuncAnimation(fig, update, frames=len(det[role]['runs']), repeat=False)
-    ani.save(f'cricket_animation_with_{role}.mp4', writer='ffmpeg', fps=1)
-    return f'cricket_animation_with_{role}.mp4'
+    ani = FuncAnimation(fig, update, frames=len(det[role]['runs']), repeat=False)
+    gif_writer = PillowWriter(fps=1)
+    ani.save(f'{st.session_state.pname}_bat_animation_with_{role}.gif', writer=gif_writer)
+    converter(f'{st.session_state.pname}_bat_animation_with_{role}.gif')
+    return f'{st.session_state.pname}_bat_animation_with_{role}.mp4'

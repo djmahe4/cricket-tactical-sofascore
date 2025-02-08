@@ -9,7 +9,7 @@ from matplotlib.patches import Circle
 import matplotlib.animation as animation
 import streamlit as st
 import os
-os.environ["PATH"] += os.pathsep + r'C:\ffmpeg-master-latest-win64-gpl\bin'
+#os.environ["PATH"] += os.pathsep + r'C:\ffmpeg-master-latest-win64-gpl\bin'
 def init():
     # Get today's date
     today = datetime.date.today() # Format the date as YYYY-MM-DD

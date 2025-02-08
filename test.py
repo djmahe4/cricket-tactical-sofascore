@@ -290,7 +290,8 @@ def append_ball_data(mid,pid):
 def bowl():
     # recent = get_matches(786470, format="T20")[:10]
     # incidents = []
-    if st.session_state.incidents2==[]:
+    if st.session_state.matches!=[]:
+        st.write(st.session_state.matches)
         with st.spinner("Filtering data.."):
             for j in st.session_state.matches:
                 try:

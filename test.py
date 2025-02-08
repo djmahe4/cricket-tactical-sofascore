@@ -344,11 +344,11 @@ def main(st):
             for i in st.session_state.matches:
                 try:
                     #st.write(i, st.session_state.pid)
-                    st.session_state.incidents.append(append_ball_data(i, st.session_state.pid, st.session_state.incidents))
+                    st.session_state.incidents2.append(append_ball_data(i, st.session_state.pid, st.session_state.incidents2))
                     #st.write(incidents)
                 except KeyError:
                     continue
-        st.session_state.incidents2 = incidents
+        #st.session_state.incidents2 = incidents
         #st.write(st.session_state.incidents2)
         st.success("Filtering Success...")
         print(st.session_state)

@@ -25,7 +25,7 @@ def reset():
     st.session_state.nmat=None
     st.session_state.h_name = None
     st.session_state.a_name = None
-    st.session_state.vanue = None
+    st.session_state.venue = None
     st.success("Reset Sucesss")
     st.rerun()
 

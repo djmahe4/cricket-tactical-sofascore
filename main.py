@@ -77,7 +77,7 @@ if st.session_state.mformat and st.session_state.recent_got is None:
 if 'recent_got' in st.session_state and st.session_state.recent_got:
     #nmat=st.slider("Select number of matches",min_value=0,max_value=len(st.session_state.recent_got))
     st.success(f"Found data for {len(st.session_state.recent_got)} {st.session_state.mformat} matches")
-    nmat=st.text_input(f"Enter an integer less than {len(st.session_state.recent_got)}")
+    nmat=st.number_input(f"Enter an integer less than {len(st.session_state.recent_got)}")
     st.session_state.nmat=nmat
     st.write(st.session_state.nmat)
     if st.button("Done"):

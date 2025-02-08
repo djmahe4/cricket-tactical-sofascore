@@ -88,9 +88,9 @@ def app():
             st.success("Great now choose any of Them!")
             ba,bo=st.columns(2)
             with ba:
-                st.page_link(st.Page(bat,title="Bat"))
+                st.page_link(st.Page(bat))
             with bo:
-                st.page_link(st.Page(bowl,title="Bowl"))
+                st.page_link(st.Page(bowl))
 def bat():
     # incidents=[]
     with st.spinner("Filtering data.."):

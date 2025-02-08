@@ -303,6 +303,7 @@ def bowl():
         # st.session_state.incidents2 = incidents
         st.write(st.session_state.incidents2)
         st.success("Filtering Success...")
+        st.write(st.session_state)
     print(st.session_state)
     if st.session_state.incidents2:
         with st.spinner("Extracting ball by ball data"):

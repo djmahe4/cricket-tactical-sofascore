@@ -295,8 +295,8 @@ def append_ball_data(mid,pid):
     jdata = json.loads(data.decode("utf-8"))['incidents']
     for i in jdata:
         if i["bowler"]["id"] == pid:
-            st.write(i)
-            st.write(info)
+            #st.write(i)
+            #st.write(info)
             i['opp'] = st.session_state.info[0]
             i['venue'] = st.session_state.info[1]
             st.write(i)

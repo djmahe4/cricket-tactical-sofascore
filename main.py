@@ -21,8 +21,7 @@ def reset():
     st.session_state.nmat=None
     st.success("Reset Sucesss")
     st.rerun()
-st.title("Sofascore Tactical Analysis")
-st.write(datetime.datetime.today())
+
 
 # Define a button to start the analysis after choices are made
 if 'match_selected' not in st.session_state:
@@ -110,6 +109,8 @@ def bat():
                 video_file.close()
         st.success("Process Complete!!")
 if __name__=="__main__":
+    st.title("Sofascore Tactical Analysis")
+    st.write(datetime.datetime.today())
     pg=st.navigation([st.Page(app,title="Setup"),st.Page(bat,title="Batting"),st.Page(bowl,title="Bowling"),
                       st.Page(reset,title='Reset')])
     pg.run()

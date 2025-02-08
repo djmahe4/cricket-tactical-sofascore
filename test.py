@@ -346,7 +346,8 @@ def main(st):
             for i in st.session_state.matches:
                 try:
                     #st.write(i, st.session_state.pid)
-                    st.session_state.incidents2.append(append_ball_data(i, st.session_state.pid, st.session_state.incidents2))
+                    incidents=append_ball_data(i, st.session_state.pid, st.session_state.incidents2)
+                    st.session_state.incidents2=incidents
                     #st.write(incidents)
                 except KeyError:
                     continue

@@ -85,6 +85,12 @@ def app():
         if st.button("Done"):
             st.session_state.matches=st.session_state.recent_got[:int(st.session_state.nmat)]
             st.write(st.session_state.matches)
+            st.success("Great now choose any of Them!")
+            ba,bo=st.columns(2)
+            with ba:
+                st.page_link(st.Page(bat))
+            with bo:
+                st.page_link(st.Page(bowl))
 def bat():
     # incidents=[]
     with st.spinner("Filtering data.."):

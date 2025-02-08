@@ -286,9 +286,7 @@ def append_ball_data(mid,pid):
             st.session_state.incidents2.append(i)
     #return incidents
 
-def main(st):
-    if "incidents2" not in st.session_state:
-        st.session_state.incidents2=[]
+def main():
     if st.session_state.switch==True:
         #recent = get_matches(786470, format="T20")[:10]
         #incidents = []

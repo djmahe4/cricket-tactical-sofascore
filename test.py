@@ -10,6 +10,7 @@ import numpy as np
 from matplotlib.patches import Circle
 import matplotlib.animation as animation
 import streamlit as st
+from icecream import ic
 #import os
 #os.environ["PATH"] += os.pathsep + r'C:\ffmpeg-master-latest-win64-gpl\bin'
 
@@ -53,17 +54,19 @@ def determine_match_format(data):
         return "Unknown format"
 def scraper(url):
     #url =
+    ic(url)
     parsed = urlparse(url)
     conn = http.client.HTTPSConnection(parsed.netloc)
     conn.request("GET", parsed.path)
     res = conn.getresponse()
     data = res.read()
     details = json.loads(data.decode("utf-8"))
+    ic(details.keys())
     return details
 def opp_team_venue(mid,pid):
-    if not st.session_state.p_details:
-        details=scraper(f"https://www.sofascore.com/api/v1/event/{mid}")
-        st.session_state.details=details
+    #if not st.session_state.details:
+    details=scraper(f"https://www.sofascore.com/api/v1/event/{mid}")
+    st.session_state.details=details
     h_name=st.session_state.details['event']['homeTeam']['name']
     st.session_state.h_name=h_name
     #h_id=details['event']['homeTeam']['id']
@@ -72,23 +75,52 @@ def opp_team_venue(mid,pid):
     #a_id=details['event']['awayTeam']['id']
     venue=st.session_state.details['event']['venue']['name']
     st.session_state.venue=venue
-    if not st.session_state.p_details:
-        p_details=scraper(f"https://www.sofascore.com/api/v1/event/{mid}/lineups")
-        st.session_state.p_details=p_details
+    ic(st.session_state.h_name,st.session_state.a_name,st.session_state.venue)
+    try:
+        ic(st.session_state.p_details.keys())
+    except:
+        ic("None")
+    #if not st.session_state.p_details:
+    p_details=scraper(f"https://www.sofascore.com/api/v1/event/{mid}/lineups")
+        #st.write(p_details['home']['players'])
+    st.session_state.p_details=p_details
+    #ic(st.session_state.p_details)
+    #with open("dat.json",'w') as f:
+        #j=json.dumps(st.session_state.p_details,indent=2)
+        #f.write(j)
     #st.write(details,p_details)
     for team in ['home','away']:
         for player in st.session_state.p_details[team]['players']:
-            if st.session_state.pid==player['id']:
+            #ic(player['name'])
+            if st.session_state.pid==player['player']['id']:
+                st.write("WTH")
+                #ic(player['name'])
+                ic(team)
                 if team == 'home':
-                    #st.write(a_name,venue)
-                    st.session_state.p_details=None
-                    st.session_state.details=None
-                    return st.session_state.a_name,st.session_state.venue
+                    ic(st.session_state.a_name,st.session_state.venue)
+                    st.write(st.session_state.a_name,st.session_state.venue)
+                    #st.session_state.p_details=None
+                    #st.session_state.details=None
+                    st.session_state.h_name=None
+                    return
+                    #return st.session_state.a_name,st.session_state.venue
                 else:
-                    #st.write(h_name,venue)
-                    st.session_state.p_details = None
-                    st.session_state.details = None
-                    return st.session_state.h_name,st.session_state.venue
+                    ic(st.session_state.h_name,st.session_state.venue)
+                    st.write(st.session_state.h_name,st.session_state.venue)
+                    #st.session_state.p_details = None
+                    #st.session_state.details = None
+                    st.session_state.a_name=None
+                    return
+                    #return st.session_state.h_name,st.session_state.venue
+    #st.session_state.p_details = None
+    #st.session_state.details = None
+    #ic("")
+    #return ('','')
+    st.session_state.a_name=''
+    st.session_state.h_name=''
+    #st.session_state.p_details = None
+    #st.session_state.details = None
+    #return None
 def get_matches(pid,matches=[], format="T20", ind=0):
   #if matches is None:
     #matches = []
@@ -282,25 +314,29 @@ def bowler_ball_by_ball(incidents):
 #@st.cache_data
 def append_ball_data(mid,pid):
     #incidents=[]
-    if st.session_state.info is None:
-        info=opp_team_venue(mid,pid)
-        st.session_state.info=info
-    st.write(st.session_state.info)
-    url = f"https://www.sofascore.com/api/v1/event/{mid}/incidents"
-    parsed = urlparse(url)
-    conn = http.client.HTTPSConnection(parsed.netloc)
-    conn.request("GET", parsed.path)
-    res = conn.getresponse()
-    data = res.read()
-    jdata = json.loads(data.decode("utf-8"))['incidents']
-    for i in jdata:
-        if i["bowler"]["id"] == pid:
+    #ic(st.session_state.info)
+    #if st.session_state.info is None:
+    opp_team_venue(mid,pid)
+        #st.session_state.p_details = None
+        #st.session_state.details = None
+        #ic(info)
+        #st.session_state.info=info
+    #st.write(st.session_state.info)
+    #ic(st.session_state.info)
+    try:
+        jdata2 = scraper(f"https://www.sofascore.com/api/v1/event/{mid}/incidents")
+    except json.JSONDecodeError:
+        return
+    for i in jdata2['incidents']:
+        #ic(i)
+        if i["bowler"]["id"] == st.session_state.pid:
             #st.write(i)
             #st.write(info)
-            i['opp'] = st.session_state.info[0]
-            i['venue'] = st.session_state.info[1]
+            i['opp'] = st.session_state.h_name if not None else st.session_state.a_name
+            i['venue'] = st.session_state.venue
             st.write(i)
-            st.session_state.info=None
+            #ic(i)
+            #st.session_state.info=None
             st.session_state.incidents2.append(i)
     #return incidents
 
@@ -313,15 +349,20 @@ def bowl():
             for j in st.session_state.matches:
                 try:
                     st.write(j)
-                    append_ball_data(j, st.session_state.pid)
+                    ic(j)
+                    jaba=append_ball_data(j, st.session_state.pid)
 
                 except KeyError:
                     continue
         # st.session_state.incidents2 = incidents
         st.write(st.session_state.incidents2)
         st.success("Filtering Success...")
+        #ic(st.session_state.p_details,st.session_state.details)
+        st.write(st.session_state.info)
+        #st.session_state.p_details=None
+        #st.session_state.details=None
         st.write(st.session_state)
-    print(st.session_state)
+    #print(st.session_state)
     if st.session_state.incidents2:
         with st.spinner("Extracting ball by ball data"):
             det = bowler_ball_by_ball(st.session_state.incidents2)

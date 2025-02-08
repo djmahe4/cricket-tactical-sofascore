@@ -10,6 +10,7 @@ def reset():
     st.session_state.choose_side = None
     st.session_state.players = None
     st.session_state.pid = None
+    st.session_state.pname=None
     st.session_state.info=None
     st.session_state.details=None
     st.session_state.p_details=None
@@ -40,7 +41,7 @@ def app():
     st.session_state.match_selected = True
 
     # Show dropdowns only after the "Start Analysis" button is clicked
-    if st.session_state.match_selected:
+    if st.session_state.match_selected and not st.session_state.choose_side:
         choice = st.selectbox("Match", list(st.session_state.choices.keys()))
         match_id = st.session_state.choices[choice]
         st.write(f"Selected match: {choice}")
@@ -49,7 +50,7 @@ def app():
         side=st.radio("Home/Away",["homeTeam","awayTeam"])
         if st.button("Show Players"):
             st.session_state.choose_side=side
-    if st.session_state.choose_side:
+    if st.session_state.choose_side and not st.session_state.pid:
         tid=requests.get(f"https://www.sofascore.com/api/v1/event/{st.session_state.mid}").json()['event'][st.session_state.choose_side]['id']
         players={x["player"]['name']:x["player"]['id'] for x in requests.get(f"https://www.sofascore.com/api/v1/team/{tid}/players").json()['players']}
         st.session_state.players=players
@@ -57,8 +58,9 @@ def app():
         pid = st.session_state.players[player]
         if st.button("Choose"):
             st.session_state.pid=pid
+            st.session_state.pname=player
             st.write(pid,player)
-    if st.session_state.pid:
+    if st.session_state.pid and not st.session_state.mformat:
         mformat=st.selectbox("Choose format",["T20","ODI","Test"])
         if st.button("Select"):
             st.session_state.mformat=mformat
@@ -70,7 +72,7 @@ def app():
         st.session_state.recent_got=recent
     if 'recent_got' in st.session_state and st.session_state.recent_got:
         #nmat=st.slider("Select number of matches",min_value=0,max_value=len(st.session_state.recent_got))
-        st.success(f"Found data for {len(st.session_state.recent_got)} {st.session_state.mformat} matches")
+        st.success(f"Found data for {len(st.session_state.recent_got)} {st.session_state.mformat} matches of {st.session_state.pname}")
         nmat=st.number_input(f"Enter an integer less than {len(st.session_state.recent_got)}")
         st.session_state.nmat=nmat
         st.write(st.session_state.nmat)
@@ -119,6 +121,7 @@ if __name__=="__main__":
         st.session_state.choose_side = None
         st.session_state.players = None
         st.session_state.pid = None
+        st.session_state.pname=None
         st.session_state.details = None
         st.session_state.p_details = None
         st.session_state.h_name=None

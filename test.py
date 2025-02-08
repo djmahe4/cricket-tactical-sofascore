@@ -295,6 +295,7 @@ def bowl():
         with st.spinner("Filtering data.."):
             for j in st.session_state.matches:
                 try:
+                    st.write(j)
                     append_ball_data(j, st.session_state.pid)
 
                 except KeyError:

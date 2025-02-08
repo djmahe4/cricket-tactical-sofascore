@@ -61,23 +61,34 @@ def scraper(url):
     details = json.loads(data.decode("utf-8"))
     return details
 def opp_team_venue(mid,pid):
-    details=scraper(f"https://www.sofascore.com/api/v1/event/{mid}")
-    h_name=details['event']['homeTeam']['name']
+    if not st.session_state.p_details:
+        details=scraper(f"https://www.sofascore.com/api/v1/event/{mid}")
+        st.session_state.details=details
+    h_name=st.session_state.details['event']['homeTeam']['name']
+    st.session_state.h_name=h_name
     #h_id=details['event']['homeTeam']['id']
-    a_name=details['event']['awayTeam']['name']
+    a_name=st.session_state.details['event']['awayTeam']['name']
+    st.session_state.a_name=a_name
     #a_id=details['event']['awayTeam']['id']
-    venue=details['event']['venue']['name']
-    p_details=scraper(f"https://www.sofascore.com/api/v1/event/{mid}/lineups")
-    st.write(details,p_details)
+    venue=st.session_state.details['event']['venue']['name']
+    st.session_state.venue=venue
+    if not st.session_state.p_details:
+        p_details=scraper(f"https://www.sofascore.com/api/v1/event/{mid}/lineups")
+        st.session_state.p_details=p_details
+    #st.write(details,p_details)
     for team in ['home','away']:
-        for player in p_details[team]['players']:
-            if pid==player['id']:
+        for player in st.session_state.p_details[team]['players']:
+            if st.session_state.pid==player['id']:
                 if team == 'home':
                     #st.write(a_name,venue)
-                    return a_name,venue
+                    st.session_state.p_details=None
+                    st.session_state.details=None
+                    return st.session_state.a_name,st.session_state.venue
                 else:
                     #st.write(h_name,venue)
-                    return h_name,venue
+                    st.session_state.p_details = None
+                    st.session_state.details = None
+                    return st.session_state.h_name,st.session_state.venue
 def get_matches(pid,matches=[], format="T20", ind=0):
   #if matches is None:
     #matches = []

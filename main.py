@@ -11,6 +11,8 @@ def reset():
     st.session_state.players = None
     st.session_state.pid = None
     st.session_state.info=None
+    st.session_state.details=None
+    st.session_state.p_details=None
     st.session_state.mformat = None
     st.session_state.recent_got = None
     st.session_state.matches = None
@@ -20,6 +22,9 @@ def reset():
     st.session_state.det2 = None
     st.session_state.switch = False
     st.session_state.nmat=None
+    st.session_state.h_name = None
+    st.session_state.a_name = None
+    st.session_state.vanue = None
     st.success("Reset Sucesss")
     st.rerun()
 
@@ -114,6 +119,11 @@ if __name__=="__main__":
         st.session_state.choose_side = None
         st.session_state.players = None
         st.session_state.pid = None
+        st.session_state.details = None
+        st.session_state.p_details = None
+        st.session_state.h_name=None
+        st.session_state.a_name=None
+        st.session_state.vanue=None
         st.session_state.mformat = None
         st.session_state.recent_got = None
         st.session_state.matches = None

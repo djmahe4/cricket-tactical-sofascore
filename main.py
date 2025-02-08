@@ -84,6 +84,7 @@ def app():
         st.write(st.session_state.nmat)
         if st.button("Done"):
             st.session_state.matches=st.session_state.recent_got[:int(st.session_state.nmat)]
+            st.write(st.session_state.matches)
 def bat():
     # incidents=[]
     with st.spinner("Filtering data.."):

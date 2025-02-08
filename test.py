@@ -51,26 +51,23 @@ def determine_match_format(data):
        return "ODI"
     else:
         return "Unknown format"
-def opp_team_venue(mid,pid):
-    url = f"https://www.sofascore.com/api/v1/event/{mid}"
+def scraper(url):
+    #url =
     parsed = urlparse(url)
     conn = http.client.HTTPSConnection(parsed.netloc)
     conn.request("GET", parsed.path)
     res = conn.getresponse()
     data = res.read()
     details = json.loads(data.decode("utf-8"))
+    return details
+def opp_team_venue(mid,pid):
+    details=scraper(f"https://www.sofascore.com/api/v1/event/{mid}")
     h_name=details['event']['homeTeam']['name']
     #h_id=details['event']['homeTeam']['id']
     a_name=details['event']['awayTeam']['name']
     #a_id=details['event']['awayTeam']['id']
     venue=details['event']['venue']['name']
-    url = f"https://www.sofascore.com/api/v1/event/{mid}/lineups"
-    parsed = urlparse(url)
-    conn = http.client.HTTPSConnection(parsed.netloc)
-    conn.request("GET", parsed.path)
-    res = conn.getresponse()
-    data = res.read()
-    p_details = json.loads(data.decode("utf-8"))
+    p_details=scraper(f"https://www.sofascore.com/api/v1/event/{mid}/lineups")
     for team in ['home','away']:
         for player in p_details[team]['players']:
             if pid==player['id']:

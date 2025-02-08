@@ -283,6 +283,7 @@ def append_ball_data(mid,pid):
         if i["bowler"]["id"] == pid:
             i['opp'] = info[0]
             i['venue'] = info[1]
+            st.write(i)
             st.session_state.incidents2.append(i)
     #return incidents
 

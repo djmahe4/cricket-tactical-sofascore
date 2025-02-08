@@ -92,6 +92,7 @@ def bat():
             except KeyError:
                 continue
     st.success("Filtering Success...")
+    st.write(st.session_state.incidents)
 
     if st.session_state.incidents :
         with st.spinner("Extracting ball by ball data"):

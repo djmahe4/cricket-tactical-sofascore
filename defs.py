@@ -346,7 +346,7 @@ def create_bat_animation(det,role):
         try:
           if bowler_name != det[role]['bowler'][frame+1]:
               df =analyze_bowling_stats(det, role, det[role]['bowler'][frame])
-              last_row = df.loc[:, df.iloc[-1] != 0].iloc[-1]
+              last_row = df.iloc[-1]
               print(f"{bowler_name} ({bowler_type})")
               print(last_row)
               st.markdown(f"## {bowler_name} ({bowler_type})")

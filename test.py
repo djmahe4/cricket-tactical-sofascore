@@ -262,7 +262,7 @@ def create_ball_animation(det,role):
           if batsman_name != det[role]['batsman'][frame+1] and batsman_name not in batters:
               #ax1.clear()
               df =analyze_batting_stats(det, role, det[role]['batsman'][frame])
-              last_row = df.loc[:, df.iloc[-1] != 0].iloc[-1]
+              last_row = df.iloc[-1]
               print(f"{batsman_name} ({batsman_type})")
               print(last_row)
               st.markdown(f"## {batsman_name} ({batsman_type})")

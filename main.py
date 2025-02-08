@@ -10,6 +10,7 @@ def reset():
     st.session_state.choose_side = None
     st.session_state.players = None
     st.session_state.pid = None
+    st.session_state.info=None
     st.session_state.mformat = None
     st.session_state.recent_got = None
     st.session_state.matches = None

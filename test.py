@@ -271,8 +271,9 @@ def bowler_ball_by_ball(incidents):
 #@st.cache_data
 def append_ball_data(mid,pid):
     #incidents=[]
-    info=opp_team_venue(mid,pid)
-    st.session_state.info=info
+    if st.session_state.info is None:
+        info=opp_team_venue(mid,pid)
+        st.session_state.info=info
     st.write(st.session_state.info)
     url = f"https://www.sofascore.com/api/v1/event/{mid}/incidents"
     parsed = urlparse(url)
@@ -288,6 +289,7 @@ def append_ball_data(mid,pid):
             i['opp'] = st.session_state.info[0]
             i['venue'] = st.session_state.info[1]
             st.write(i)
+            st.session_state.info=None
             st.session_state.incidents2.append(i)
     #return incidents
 

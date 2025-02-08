@@ -274,6 +274,7 @@ def bowler_ball_by_ball(incidents):
 def append_ball_data(mid,pid):
     #incidents=[]
     info=opp_team_venue(mid,pid)
+    st.write(info)
     url = f"https://www.sofascore.com/api/v1/event/{mid}/incidents"
     parsed = urlparse(url)
     conn = http.client.HTTPSConnection(parsed.netloc)
@@ -283,6 +284,8 @@ def append_ball_data(mid,pid):
     jdata = json.loads(data.decode("utf-8"))['incidents']
     for i in jdata:
         if i["bowler"]["id"] == pid:
+            st.write(i)
+            st.write(info)
             i['opp'] = info[0]
             i['venue'] = info[1]
             st.write(i)

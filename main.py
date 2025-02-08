@@ -104,9 +104,9 @@ if st.session_state.matches:
             for i in st.session_state.matches:
                 try:
                     incidents=append_bat_data(i,st.session_state.pid,incidents)
+                    st.session_state.incidents = incidents
                 except KeyError:
                     continue
-        st.session_state.incidents = incidents
         st.success("Filtering Success...")
     else:
         if st.button("Bowling"):

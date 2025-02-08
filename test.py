@@ -269,7 +269,7 @@ def bowler_ball_by_ball(incidents):
             continue
     return det
 #@st.cache_data
-def append_ball_data(mid,pid,incidents=[]):
+def append_ball_data(mid,pid):
     #incidents=[]
     info=opp_team_venue(mid,pid)
     url = f"https://www.sofascore.com/api/v1/event/{mid}/incidents"
@@ -283,21 +283,23 @@ def append_ball_data(mid,pid,incidents=[]):
         if i["bowler"]["id"] == pid:
             i['opp'] = info[0]
             i['venue'] = info[1]
-            incidents.append(i)
-    return incidents
+            st.session_state.incidents2.append(i)
+    #return incidents
 
 def main(st):
+    if "incidents2" not in st.session_state:
+        st.session_state.incidents2=[]
     if st.session_state.switch==True:
         #recent = get_matches(786470, format="T20")[:10]
-        incidents = []
+        #incidents = []
         with st.spinner("Filtering data.."):
             for i in st.session_state.matches:
                 try:
-                    incidents = append_ball_data(i, st.session_state.pid, incidents)
+                    append_ball_data(i, st.session_state.pid)
                     st.write(st.session_state.incidents2)
                 except KeyError:
                     continue
-        st.session_state.incidents2 = incidents
+        #st.session_state.incidents2 = incidents
         st.success("Filtering Success...")
         print(st.session_state)
     if st.session_state.incidents2:

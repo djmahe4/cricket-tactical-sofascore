@@ -99,12 +99,14 @@ if 'recent_got' in st.session_state and st.session_state.recent_got:
 if st.session_state.matches:
     on=st.toggle("Keep it on to analyse batting..")
     if on:
-        incidents=[]
+        if "incidents" not in st.session_state:
+            st.session_state.incidents = []
+        #incidents=[]
         with st.spinner("Filtering data.."):
             for i in st.session_state.matches:
                 try:
-                    incidents=append_bat_data(i,st.session_state.pid,incidents)
-                    st.session_state.incidents = incidents
+                    append_bat_data(i,st.session_state.pid)
+                    #st.session_state.incidents = incidents
                 except KeyError:
                     continue
         st.success("Filtering Success...")

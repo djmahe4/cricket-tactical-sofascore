@@ -180,7 +180,7 @@ def opp_team_venue(mid,pid):
                 elif a_id == player['teamId']:
                     return h_name,venue
 #@st.cache_data
-def append_bat_data(mid,pid,incidents=[]):
+def append_bat_data(mid,pid):
     info = opp_team_venue(mid, pid)
     #st.session_state.info=info
     #incidents=[]
@@ -195,8 +195,8 @@ def append_bat_data(mid,pid,incidents=[]):
         if i["batsman"]["id"] == pid:
             i['opp']=info[0]
             i['venue']=info[1]
-            incidents.append(i)
-    return incidents
+            st.session_state.incidents.append(i)
+    #return incidents
 def batter_ball_by_ball(incidents):
     det = {}
     for incident in incidents[::-1]:

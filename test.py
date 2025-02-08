@@ -60,9 +60,9 @@ def opp_team_venue(mid,pid):
     data = res.read()
     details = json.loads(data.decode("utf-8"))
     h_name=details['event']['homeTeam']['name']
-    h_id=details['event']['homeTeam']['id']
+    #h_id=details['event']['homeTeam']['id']
     a_name=details['event']['awayTeam']['name']
-    a_id=details['event']['awayTeam']['id']
+    #a_id=details['event']['awayTeam']['id']
     venue=details['event']['venue']['name']
     url = f"https://www.sofascore.com/api/v1/event/{mid}/lineups"
     parsed = urlparse(url)
@@ -74,9 +74,11 @@ def opp_team_venue(mid,pid):
     for team in ['home','away']:
         for player in p_details[team]['players']:
             if pid==player['id']:
-                if h_id == player['teamId']:
+                if team == 'home':
+                    #st.write(a_name,venue)
                     return a_name,venue
-                elif a_id == player['teamId']:
+                else:
+                    #st.write(h_name,venue)
                     return h_name,venue
 def get_matches(pid,matches=[], format="T20", ind=0):
   #if matches is None:

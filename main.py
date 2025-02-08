@@ -110,7 +110,7 @@ if st.session_state.matches:
         with st.spinner("Filtering data.."):
             for i in st.session_state.matches:
                 try:
-                    incidents=append_bat_data(i,st.session_state.pid,incidents)
+                    incidents=append_bat_data(i,st.session_state.pid,st.session_state.incidents)
                     st.session_state.incidents = incidents
                 except KeyError as e:
                     st.error(e)

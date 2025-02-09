@@ -13,6 +13,17 @@ import streamlit as st
 import imageio
 import tempfile
 #from icecream import ic
+def expansion():
+    data = {
+        'Zone': ['G', 'LG', 'H', 'P', 'OD', 'SD', 'OfD', 'CD', 'CtD', 'SqC', 'LC'],
+        'Expansion': ['Glance', 'Leg glance', 'Hook', 'Pull', 'On drive', 'Straight drive', 'Off drive', 'Cover drive',
+                      'Cut Drive', 'Square cut', 'Late cut']
+    }
+
+    exp = pd.DataFrame(data)
+    st.dataframe(exp)
+    st.image("reference.png")
+    #return exp
 def reset():
     #st.session_state.conn =None
     st.session_state.match_selected = False

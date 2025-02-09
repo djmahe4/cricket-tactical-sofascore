@@ -131,5 +131,5 @@ if __name__=="__main__":
         st.session_state.det2 = None
         st.session_state.switch = False
     pg=st.navigation([st.Page(app,title="Setup"),st.Page(bat,title="Batting"),st.Page(bowl,title="Bowling"),
-                      st.Page(reset,title='Reset')])
+                      st.Page(reset,title='Reset'),st.Page(expansion,title="Shot Notations")])
     pg.run()

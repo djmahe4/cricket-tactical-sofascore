@@ -3,7 +3,7 @@ import datetime
 from defs import *
 import requests
 from test import bowl
-from icecream import ic
+#from icecream import ic
 
 @st.cache_resource
 def conn_make():
@@ -49,7 +49,7 @@ def app():
         with st.spinner("Getting recent data.."):
             recent=get_matches(st.session_state.pid,format=st.session_state.mformat)
         st.success("Got recent stats")
-        ic(st.session_state.recent_got)
+        #ic(st.session_state.recent_got)
         st.session_state.recent_got=recent
     if 'recent_got' in st.session_state and st.session_state.recent_got != []:
         #nmat=st.slider("Select number of matches",min_value=0,max_value=len(st.session_state.recent_got))

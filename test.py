@@ -350,7 +350,7 @@ def bowler_ball_by_ball(incidents):
     return det
 #@st.cache_data
 def append_ball_data(mid,pid):
-    #incidents=[]
+    #
     #ic(st.session_state.info)
     #if st.session_state.info is None:
     opp_team_venue(mid,pid)
@@ -364,6 +364,7 @@ def append_ball_data(mid,pid):
         jdata2 = scraper(f"https://www.sofascore.com/api/v1/event/{mid}/incidents")
     except json.JSONDecodeError:
         return
+    #incidents = []
     for i in jdata2['incidents']:
         #ic(i)
         if i["bowler"]["id"] == st.session_state.pid:
@@ -377,6 +378,7 @@ def append_ball_data(mid,pid):
             #st.write(i)
             #ic(i)
             #st.session_state.info=None
+            #incidents.append(i)
             st.session_state.incidents2.append(i)
     #return incidents
 
@@ -391,16 +393,18 @@ def bowl():
         if st.button("Reset"):
             reset()
         #st.write(st.session_state.matches)
-        with st.spinner("Filtering data.."):
-            for j in st.session_state.matches:
-                try:
-                    st.write(j)
-                    #ic(j)
-                    jaba=append_ball_data(j, st.session_state.pid)
+        if st.session_state.incidents2==[]:
+            with st.spinner("Filtering data.."):
+                #incidents=[]
+                for j in st.session_state.matches:
+                    try:
+                        st.write(j)
+                        #ic(j)
+                        append_ball_data(j, st.session_state.pid)
 
-                except KeyError:
-                    continue
-        # st.session_state.incidents2 = incidents
+                    except KeyError:
+                        continue
+        #st.session_state.incidents2 = incidents
         #st.write(st.session_state.incidents2)
         st.success("Filtering Success...")
         #ic(st.session_state.p_details,st.session_state.details)
@@ -410,6 +414,7 @@ def bowl():
         #st.write(st.session_state)
     #print(st.session_state)
     if st.session_state.incidents2:
+        #ic(st.session_state.incidents2)
         with st.spinner("Extracting ball by ball data"):
             det = bowler_ball_by_ball(st.session_state.incidents2)
         st.success("Extraction successful")

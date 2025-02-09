@@ -76,12 +76,13 @@ def bat():
         if st.button("Reset"):
             reset()
         with st.spinner("Filtering data.."):
-            for j in st.session_state.matches:
-                try:
-                    append_bat_data(j, st.session_state.pid)
-                    # st.session_state.incidents = incidents
-                except KeyError:
-                    continue
+            if st.session_state.incidents==[]:
+                for j in st.session_state.matches:
+                    try:
+                        append_bat_data(j, st.session_state.pid)
+                        # st.session_state.incidents = incidents
+                    except KeyError:
+                        continue
         st.success("Filtering Success...")
         #st.write(st.session_state.incidents)
 

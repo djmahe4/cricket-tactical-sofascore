@@ -3,16 +3,20 @@ import datetime
 from defs import *
 import requests
 from test import bowl
+from icecream import ic
 
-
+@st.cache_resource
+def conn_make():
+    url = f"https://www.sofascore.com/api/v1/event/12527965"
+    parsed = urlparse(url)
+    conn = http.client.HTTPSConnection(parsed.netloc)
+    st.session_state.conn=conn
+    #conn.request("GET", parsed.path)
 
 def app():
     st.title("Sofascore Tactical Analysis")
     st.write(datetime.datetime.today())
-    contents = init()  # Only calls match_id_init once
-    choices = contents
 
-    st.session_state.choices = choices
     st.session_state.match_selected = True
 
     # Show dropdowns only after the "Start Analysis" button is clicked
@@ -22,9 +26,10 @@ def app():
         st.write(f"Selected match: {choice}")
         st.write(f"Match ID: {match_id}")
         st.session_state.mid=match_id
-        side=st.radio("Home/Away",["homeTeam","awayTeam"])
+    if st.session_state.mid and not st.session_state.choose_side:
+        side = st.radio("Home/Away", ["homeTeam", "awayTeam"])
         if st.button("Show Players"):
-            st.session_state.choose_side=side
+            st.session_state.choose_side = side
     if st.session_state.choose_side and not st.session_state.pid:
         tid=requests.get(f"https://www.sofascore.com/api/v1/event/{st.session_state.mid}").json()['event'][st.session_state.choose_side]['id']
         players={x["player"]['name']:x["player"]['id'] for x in requests.get(f"https://www.sofascore.com/api/v1/team/{tid}/players").json()['players']}
@@ -40,12 +45,13 @@ def app():
         if st.button("Select"):
             st.session_state.mformat=mformat
             #st.write(st.session_state)
-    if st.session_state.mformat and st.session_state.recent_got is None:
+    if st.session_state.mformat and st.session_state.recent_got == []:
         with st.spinner("Getting recent data.."):
             recent=get_matches(st.session_state.pid,format=st.session_state.mformat)
         st.success("Got recent stats")
+        ic(st.session_state.recent_got)
         st.session_state.recent_got=recent
-    if 'recent_got' in st.session_state and st.session_state.recent_got:
+    if 'recent_got' in st.session_state and st.session_state.recent_got != []:
         #nmat=st.slider("Select number of matches",min_value=0,max_value=len(st.session_state.recent_got))
         st.success(f"Found data for {len(st.session_state.recent_got)} {st.session_state.mformat} matches of {st.session_state.pname}")
         nmat=st.number_input(f"Enter an integer less than {len(st.session_state.recent_got)}")
@@ -97,6 +103,11 @@ def bat():
 if __name__=="__main__":
     # Define a button to start the analysis after choices are made
     if 'match_selected' not in st.session_state:
+        conn_make()
+        contents = init()  # Only calls match_id_init once
+        choices = contents
+
+        st.session_state.choices = choices
         st.session_state.match_selected = False
         st.session_state.mid = None
         st.session_state.info=None
@@ -108,9 +119,10 @@ if __name__=="__main__":
         st.session_state.p_details = None
         st.session_state.h_name=None
         st.session_state.a_name=None
-        st.session_state.vanue=None
+        st.session_state.venue=None
         st.session_state.mformat = None
-        st.session_state.recent_got = None
+        st.session_state.df=None
+        st.session_state.recent_got = []
         st.session_state.matches = []
         st.session_state.incidents = []
         st.session_state.det = None

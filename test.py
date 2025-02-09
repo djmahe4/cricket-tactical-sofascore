@@ -1,3 +1,5 @@
+#Bowler perspective Analysis
+
 #from defs import *
 import datetime,requests
 #from defs import get_matches
@@ -27,7 +29,7 @@ def reset():
     st.session_state.details=None
     st.session_state.p_details=None
     st.session_state.mformat = None
-    st.session_state.recent_got = None
+    st.session_state.recent_got = []
     st.session_state.matches = []
     st.session_state.incidents = []
     st.session_state.det = None
@@ -37,9 +39,11 @@ def reset():
     st.session_state.nmat=None
     st.session_state.h_name = None
     st.session_state.a_name = None
+    st.session_state.df=None
     st.session_state.venue = None
     st.success("Reset Sucesss")
     st.rerun()
+    return
 def converter(gif_path):
     #os.popen("pip install imageio[ffmpeg]")
     #imageio.plugins.ffmpeg.download()
@@ -83,8 +87,8 @@ def determine_match_format(data):
     away_innings = data['awayScore'].get('innings', {})
 
     all_innings = list(home_innings.values()) + list(away_innings.values())
-
-    print(all_innings,data['id'])
+    #ic(home_innings,away_innings)
+    #print(all_innings,data['id'])
     if not all_innings:
         return "Unknown format"
 
@@ -93,20 +97,22 @@ def determine_match_format(data):
 
     for innings in all_innings:
         if 'overs' not in innings:  # Handle cases where 'overs' might be missing
+            #ic(innings)
             return "Unknown format"
         total_overs += innings['overs']
 
     # More robust logic based on total overs and number of innings
-    if total_innings > 2: #most likely a test, but check overs
-        if total_overs <= 200: #edge case for rain affected test match
-            return "Test"
-        else:
-            return "Test"
+    #if total_innings > 2: #most likely a test, but check overs
+    if total_overs >= 110: #edge case for rain affected test match
+        return "Test"
+    #else:
+        #return "Test"
     #elif total_innings == 4:
         #return "Test"
-    elif total_innings == 2 and total_overs <= 40:
+    elif total_overs <= 50:
+        #ic('yes')
         return "T20"
-    elif total_innings == 2 and total_overs <= 100:
+    elif total_overs <= 110:
        return "ODI"
     else:
         return "Unknown format"
@@ -114,9 +120,9 @@ def scraper(url):
     #url =
     #ic(url)
     parsed = urlparse(url)
-    conn = http.client.HTTPSConnection(parsed.netloc)
-    conn.request("GET", parsed.path)
-    res = conn.getresponse()
+    #conn = http.client.HTTPSConnection(parsed.netloc)
+    st.session_state.conn.request("GET", parsed.path)
+    res = st.session_state.conn.getresponse()
     data = res.read()
     details = json.loads(data.decode("utf-8"))
     #ic(details.keys())
@@ -150,27 +156,23 @@ def opp_team_venue(mid,pid):
     st.session_state.a_name=''
     st.session_state.h_name=''
 def get_matches(pid,matches=[], format="T20", ind=0):
-  #if matches is None:
-    #matches = []
-  url = f"https://www.sofascore.com/api/v1/player/{pid}/events/last/{ind}"
-  parsed = urlparse(url)
-  conn = http.client.HTTPSConnection(parsed.netloc)
-  conn.request("GET", parsed.path)
-  res = conn.getresponse()
-  data = res.read()
-  jdata = json.loads(data.decode("utf-8"))
+  mdata = scraper(f"https://www.sofascore.com/api/v1/player/{pid}/events/last/{ind}")
+  #ic(mdata.keys())
   #print(jdata['events'][0])
   try:
-    for event in jdata['events']:
+    for event in mdata['events']:
       ans=determine_match_format(event)
-      print(ans)
+      #ic(ans)
+      #print(ans)
       if format == ans:
         matches.append(event['id'])
-        print(event['id'])
+        #print(event['id'])
+        #ic(event['id'])
   except KeyError:
     return matches
-  if jdata.get('hasNextPage'):
+  if mdata.get('hasNextPage'):
     get_matches(pid,matches, format, ind + 1)
+  #st.session_state.recent_got.append(matches)
   return matches
 def analyze_batting_stats(det, batting_type, player_slug):
     """
@@ -225,7 +227,11 @@ def analyze_batting_stats(det, batting_type, player_slug):
         df[f'wickets_in_{zone}'] = df.loc[df['zone'] == zone, 'runs'].apply(lambda x: 1 if x == 'W' else 0).sum()
         df[f'runs_in_{zone}'] = df.loc[df['zone']==zone,'runs'].apply(lambda x: 0 if x=='W' else x).sum()
     df['wickets']=df['wicket'].apply(lambda x: 1 if x!='' else 0).sum()
-    df.drop(['is_boundary', 'wicket', 'dots', 'zone', 'x', 'y', 'length', 'angle','runs'])
+    try:
+        df = df.loc[:, df.iloc[-1] != 0 ]
+    except Exception as e:
+        pd.set_option('display.max_coloumns',None)
+        print(e)
     return df
 def create_ball_animation(det,role):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
@@ -363,7 +369,10 @@ def append_ball_data(mid,pid):
         if i["bowler"]["id"] == st.session_state.pid:
             #st.write(i)
             #st.write(info)
-            i['opp'] = st.session_state.h_name if not None else st.session_state.a_name
+            if st.session_state.h_name is None:
+                i['opp'] = st.session_state.a_name
+            else:
+                i['opp'] = st.session_state.h_name
             i['venue'] = st.session_state.venue
             #st.write(i)
             #ic(i)

@@ -100,11 +100,12 @@ def init():
     today = datetime.date.today() # Format the date as YYYY-MM-DD
     formatted_date = today.strftime("%Y-%m-%d")
     print(formatted_date)
-
-    response = requests.get(
-    f'https://www.sofascore.com/api/v1/sport/cricket/scheduled-events/{formatted_date}'
-    )
-    data=response.json()['events']
+    parsed = urlparse(f'https://www.sofascore.com/api/v1/sport/cricket/scheduled-events/{formatted_date}')
+    st.session_state.conn = http.client.HTTPSConnection(parsed.netloc)
+    st.session_state.conn.request("GET", parsed.path)
+    res = st.session_state.conn.getresponse()
+    xdata = res.read()
+    data=json.loads(xdata.decode("utf-8"))['events']
     diction={}
     for i in data:
         #if i['tournament']['uniqueTournament']['hasEventPlayerStatistics']==False:

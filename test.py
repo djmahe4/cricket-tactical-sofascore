@@ -155,7 +155,7 @@ def opp_team_venue(mid,pid):
                     return
     st.session_state.a_name=''
     st.session_state.h_name=''
-def get_matches(pid,matches=[], format="T20", ind=0):
+def get_matches(pid,matches=[], format="T20", ind=0,mtime=[]):
   mdata = scraper(f"https://www.sofascore.com/api/v1/player/{pid}/events/last/{ind}")
   #ic(mdata.keys())
   #print(jdata['events'][0])
@@ -165,14 +165,29 @@ def get_matches(pid,matches=[], format="T20", ind=0):
       #ic(ans)
       #print(ans)
       if format == ans:
+        print(event["startTimestamp"],event['id'])
         matches.append(event['id'])
+        mtime.append(event["startTimestamp"])
         #print(event['id'])
         #ic(event['id'])
   except KeyError:
     return matches
   if mdata.get('hasNextPage'):
-    get_matches(pid,matches, format, ind + 1)
+    get_matches(pid,matches, format, ind + 1,mtime)
   #st.session_state.recent_got.append(matches)
+  #print(matches)
+  # Combine the lists into pairs and sort
+  combined = list(zip(mtime, matches))
+  # Sort in descending order based on timestamp (first element of each pair)
+  combined.sort(reverse=True)
+
+  # Unzip back into separate lists
+  mtime_sorted, matches_sorted = zip(*combined)
+
+  # Convert back to lists if needed (zip returns tuples)
+  #mtime_sorted = list(mtime_sorted)
+  matches = list(matches_sorted)
+
   return matches
 def analyze_batting_stats(det, batting_type, player_slug):
     """

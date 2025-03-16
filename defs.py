@@ -57,7 +57,7 @@ def scraper(url):
     #url =
     #ic(url)
     parsed = urlparse(url)
-    #conn = http.client.HTTPSConnection(parsed.netloc)
+    #st.session_state.conn = http.client.HTTPSConnection(parsed.netloc)
     st.session_state.conn.request("GET", parsed.path)
     res = st.session_state.conn.getresponse()
     data = res.read()
@@ -180,7 +180,7 @@ def analyze_bowling_stats(det, bowling_type, player_slug):
         pd.set_option('display.max_coloumns',None)
     return df
 
-def get_matches(pid,matches=[], format="T20", ind=0):
+def get_matches(pid,matches=[], format="T20", ind=0,mtime=[]):
   mdata = scraper(f"https://www.sofascore.com/api/v1/player/{pid}/events/last/{ind}")
   #ic(mdata.keys())
   #print(jdata['events'][0])
@@ -190,14 +190,29 @@ def get_matches(pid,matches=[], format="T20", ind=0):
       #ic(ans)
       #print(ans)
       if format == ans:
+        print(event["startTimestamp"],event['id'])
         matches.append(event['id'])
+        mtime.append(event["startTimestamp"])
         #print(event['id'])
         #ic(event['id'])
   except KeyError:
     return matches
   if mdata.get('hasNextPage'):
-    get_matches(pid,matches, format, ind + 1)
+    get_matches(pid,matches, format, ind + 1,mtime)
   #st.session_state.recent_got.append(matches)
+  #print(matches)
+  # Combine the lists into pairs and sort
+  combined = list(zip(mtime, matches))
+  # Sort in descending order based on timestamp (first element of each pair)
+  combined.sort(reverse=True)
+
+  # Unzip back into separate lists
+  mtime_sorted, matches_sorted = zip(*combined)
+
+  # Convert back to lists if needed (zip returns tuples)
+  #mtime_sorted = list(mtime_sorted)
+  matches = list(matches_sorted)
+
   return matches
 #init()
 def determine_match_format(data):
@@ -402,3 +417,4 @@ def create_bat_animation(det,role):
     ani.save(f'{st.session_state.pname}_bat_animation_with_{role}.gif', writer=gif_writer)
     converter(f'{st.session_state.pname}_bat_animation_with_{role}.gif')
     return f'{st.session_state.pname}_bat_animation_with_{role}.mp4'
+#print(get_matches(953740)[0])

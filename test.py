@@ -416,7 +416,7 @@ def append_ball_data(mid,pid):
             #incidents.append(i)
             st.session_state.incidents2.append(i)
     if st.session_state.overs > 0:  # Only display if there were any balls faced
-        st.write(f"Match {mid}: {st.session_state.incidents[-1]['opp']} at {st.session_state.incidents[-1]['venue']}, ",
+        st.write(f"Match {mid}: {st.session_state.incidents2[-1]['opp']} at {st.session_state.incidents2[-1]['venue']}, ",
                  f"{st.session_state.wickets}/{st.session_state.runs}({st.session_state.overs // 6}.{st.session_state.overs % 6})")
     else:
         st.write(f"Match {mid}: No bowling data for player {pid}")

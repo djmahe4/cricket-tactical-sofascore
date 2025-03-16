@@ -1,4 +1,5 @@
 #Bowler perspective Analysis
+
 #from defs import *
 import datetime,requests
 #from defs import get_matches
@@ -9,13 +10,198 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Circle
-import matplotlib.animation as animation
-import streamlit as st
 from matplotlib.animation import FuncAnimation,PillowWriter
+import streamlit as st
 import imageio
 import tempfile
-import os
+#from main import app
+#from icecream import ic
+#import os
 #os.environ["PATH"] += os.pathsep + r'C:\ffmpeg-master-latest-win64-gpl\bin'
+def reset():
+    st.session_state.match_selected = False
+    st.session_state.mid = None
+    st.session_state.choose_side = None
+    st.session_state.players = None
+    st.session_state.pid = None
+    st.session_state.pname=None
+    st.session_state.info=None
+    st.session_state.details=None
+    st.session_state.p_details=None
+    st.session_state.mformat = None
+    st.session_state.recent_got = []
+    st.session_state.matches = []
+    st.session_state.incidents = []
+    st.session_state.det = None
+    st.session_state.incidents2 = []
+    st.session_state.det2 = None
+    st.session_state.switch = False
+    st.session_state.nmat=None
+    st.session_state.h_name = None
+    st.session_state.a_name = None
+    st.session_state.df=None
+    st.session_state.venue = None
+    st.session_state.runs=0
+    st.session_state.wickets=0
+    st.session_state.overs=0
+    st.success("Reset Sucesss")
+    st.rerun()
+    return
+def converter(gif_path):
+    #os.popen("pip install imageio[ffmpeg]")
+    #imageio.plugins.ffmpeg.download()
+    try:
+        with open(gif_path, 'rb') as f:
+            st.write("Found GIF file:", gif_path)
+    except FileNotFoundError:
+        st.error("GIF file not found!")
+        return
+
+    try:
+        # Create a temporary file to save the converted video
+        with tempfile.NamedTemporaryFile(suffix=".mp4",prefix=gif_path[:-4]) as temp_file:
+            gif_reader = imageio.get_reader(gif_path, format='GIF')
+            fps = gif_reader.get_meta_data().get('fps', 1)  # Default to 1 FPS if metadata is missing
+
+            #st.write(f"Temporary file created: {temp_file.name}")
+
+            # Create a video writer for MP4 format
+            with imageio.get_writer(temp_file.name, format='mp4', fps=fps) as video_writer:
+                for frame in gif_reader:
+                    video_writer.append_data(frame)
+
+            st.success("Conversion successful!")
+            st.video(temp_file.name)
+
+            # Provide a download link for the converted MP4 file
+            with open(temp_file.name, "rb") as f:
+                st.download_button(label="Download MP4", data=f.read(), file_name=f"{gif_path[:-4]}.mp4", mime="video/mp4")
+    except Exception as e:
+        st.error(f"An error occurred during conversion: {e}")
+
+def determine_match_format(data):
+    """Determines the cricket match format based on innings data.
+
+    Returns:
+        "T20", "ODI", "Test", or "Unknown format".
+    """
+    home_innings = data['homeScore'].get('innings', {})
+
+    away_innings = data['awayScore'].get('innings', {})
+
+    all_innings = list(home_innings.values()) + list(away_innings.values())
+    #ic(home_innings,away_innings)
+    #print(all_innings,data['id'])
+    if not all_innings:
+        return "Unknown format"
+
+    total_innings = len(all_innings)
+    total_overs = 0
+
+    for innings in all_innings:
+        if 'overs' not in innings:  # Handle cases where 'overs' might be missing
+            #ic(innings)
+            return "Unknown format"
+        total_overs += innings['overs']
+
+    # More robust logic based on total overs and number of innings
+    #if total_innings > 2: #most likely a test, but check overs
+    if total_overs >= 110: #edge case for rain affected test match
+        return "Test"
+    #else:
+        #return "Test"
+    #elif total_innings == 4:
+        #return "Test"
+    elif total_overs <= 50:
+        #ic('yes')
+        return "T20"
+    elif total_overs <= 110:
+       return "ODI"
+    else:
+        return "Unknown format"
+def scraper(url):
+    #url =
+    #ic(url)
+    parsed = urlparse(url)
+    #conn = http.client.HTTPSConnection(parsed.netloc)
+    st.session_state.conn.request("GET", parsed.path)
+    res = st.session_state.conn.getresponse()
+    data = res.read()
+    details = json.loads(data.decode("utf-8"))
+    #ic(details.keys())
+    return details
+def opp_team_venue(mid,pid):
+    #if not st.session_state.details:
+    details=scraper(f"https://www.sofascore.com/api/v1/event/{mid}")
+    st.session_state.details=details
+    h_name=st.session_state.details['event']['homeTeam']['name']
+    st.session_state.h_name=h_name
+    #h_id=details['event']['homeTeam']['id']
+    a_name=st.session_state.details['event']['awayTeam']['name']
+    st.session_state.a_name=a_name
+    #a_id=details['event']['awayTeam']['id']
+    venue=st.session_state.details['event']['venue']['name']
+    st.session_state.venue=venue
+    p_details=scraper(f"https://www.sofascore.com/api/v1/event/{mid}/lineups")
+        #st.write(p_details['home']['players'])
+    st.session_state.p_details=p_details
+    for team in ['home','away']:
+        for player in st.session_state.p_details[team]['players']:
+            #ic(player['name'])
+            if st.session_state.pid==player['player']['id']:
+                if team == 'home':
+                    st.session_state.h_name=None
+                    return
+                    #return st.session_state.a_name,st.session_state.venue
+                else:
+                    st.session_state.a_name=None
+                    return
+    st.session_state.a_name=''
+    st.session_state.h_name=''
+def get_matches(pid,matches=[], format="T20", ind=0,mtime=[]):
+  mdata = scraper(f"https://www.sofascore.com/api/v1/player/{pid}/events/last/{ind}")
+  #ic(mdata.keys())
+  #print(jdata['events'][0])
+  try:
+    for event in mdata['events']:
+      ans=determine_match_format(event)
+      #ic(ans)
+      #print(ans)
+      if format == ans:
+        print(event["startTimestamp"],event['id'])
+        matches.append(event['id'])
+        mtime.append(event["startTimestamp"])
+        #print(event['id'])
+        #ic(event['id'])
+  except KeyError:
+      combined = list(zip(mtime, matches))
+      # Sort in descending order based on timestamp (first element of each pair)
+      combined.sort(reverse=True)
+
+      # Unzip back into separate lists
+      mtime_sorted, matches_sorted = zip(*combined)
+
+      # Convert back to lists if needed (zip returns tuples)
+      # mtime_sorted = list(mtime_sorted)
+      matches = list(matches_sorted)
+      return matches
+  if mdata.get('hasNextPage'):
+    get_matches(pid,matches, format, ind + 1,mtime)
+  #st.session_state.recent_got.append(matches)
+  #print(matches)
+  # Combine the lists into pairs and sort
+  combined = list(zip(mtime, matches))
+  # Sort in descending order based on timestamp (first element of each pair)
+  combined.sort(reverse=True)
+
+  # Unzip back into separate lists
+  mtime_sorted, matches_sorted = zip(*combined)
+
+  # Convert back to lists if needed (zip returns tuples)
+  #mtime_sorted = list(mtime_sorted)
+  matches = list(matches_sorted)
+
+  return matches
 def analyze_batting_stats(det, batting_type, player_slug):
     """
     Analyzes a bowler's stats against a specific batsman.
@@ -69,133 +255,12 @@ def analyze_batting_stats(det, batting_type, player_slug):
         df[f'wickets_in_{zone}'] = df.loc[df['zone'] == zone, 'runs'].apply(lambda x: 1 if x == 'W' else 0).sum()
         df[f'runs_in_{zone}'] = df.loc[df['zone']==zone,'runs'].apply(lambda x: 0 if x=='W' else x).sum()
     df['wickets']=df['wicket'].apply(lambda x: 1 if x!='' else 0).sum()
-    df.drop(['is_boundary','wicket','dots','zone','x','y','length','angle'])
-    return df
-def converter(gif_path):
-    #os.popen("pip install imageio[ffmpeg]")
-    #imageio.plugins.ffmpeg.download()
     try:
-        with open(gif_path, 'rb') as f:
-            st.write("Found GIF file:", gif_path)
-    except FileNotFoundError:
-        st.error("GIF file not found!")
-        return
-
-    try:
-        # Create a temporary file to save the converted video
-        with tempfile.NamedTemporaryFile(suffix=".mp4",prefix=gif_path[:-4]) as temp_file:
-            gif_reader = imageio.get_reader(gif_path, format='GIF')
-            fps = gif_reader.get_meta_data().get('fps', 1)  # Default to 1 FPS if metadata is missing
-
-            #st.write(f"Temporary file created: {temp_file.name}")
-
-            # Create a video writer for MP4 format
-            with imageio.get_writer(temp_file.name, format='mp4', fps=fps) as video_writer:
-                for frame in gif_reader:
-                    video_writer.append_data(frame)
-
-            st.success("Conversion successful!")
-            st.video(temp_file.name)
-
-            # Provide a download link for the converted MP4 file
-            with open(temp_file.name, "rb") as f:
-                st.download_button(label="Download MP4", data=f.read(), file_name=f"{gif_path[:-4]}.mp4", mime="video/mp4")
+        df = df.loc[:, df.iloc[-1] != 0 ]
     except Exception as e:
-        st.error(f"An error occurred during conversion: {e}")
-
-def determine_match_format(data):
-    """Determines the cricket match format based on innings data.
-
-    Returns:
-        "T20", "ODI", "Test", or "Unknown format".
-    """
-    home_innings = data['homeScore'].get('innings', {})
-
-    away_innings = data['awayScore'].get('innings', {})
-
-    all_innings = list(home_innings.values()) + list(away_innings.values())
-
-    print(all_innings,data['id'])
-    if not all_innings:
-        return "Unknown format"
-
-    total_innings = len(all_innings)
-    total_overs = 0
-
-    for innings in all_innings:
-        if 'overs' not in innings:  # Handle cases where 'overs' might be missing
-            return "Unknown format"
-        total_overs += innings['overs']
-
-    # More robust logic based on total overs and number of innings
-    if total_innings > 2: #most likely a test, but check overs
-        if total_overs <= 200: #edge case for rain affected test match
-            return "Test"
-        else:
-            return "Test"
-    #elif total_innings == 4:
-        #return "Test"
-    elif total_innings == 2 and total_overs <= 40:
-        return "T20"
-    elif total_innings == 2 and total_overs <= 100:
-       return "ODI"
-    else:
-        return "Unknown format"
-def opp_team_venue(mid,pid):
-    url = f"https://www.sofascore.com/api/v1/event/{mid}"
-    parsed = urlparse(url)
-    conn = http.client.HTTPSConnection(parsed.netloc)
-    conn.request("GET", parsed.path)
-    res = conn.getresponse()
-    data = res.read()
-    details = json.loads(data.decode("utf-8"))
-    h_name=details['event']['homeTeam']['name']
-    h_id=details['event']['homeTeam']['id']
-    a_name=details['event']['awayTeam']['name']
-    a_id=details['event']['awayTeam']['id']
-    venue=details['event']['venue']['name']
-    url = f"https://www.sofascore.com/api/v1/event/{mid}/lineups"
-    parsed = urlparse(url)
-    conn = http.client.HTTPSConnection(parsed.netloc)
-    conn.request("GET", parsed.path)
-    res = conn.getresponse()
-    data = res.read()
-    p_details = json.loads(data.decode("utf-8"))
-    #st.write(a_id,a_name,h_name,h_id,venue)
-    for team in ['home','away']:
-        for player in p_details[team]['players']:
-            if pid==player['player']['id']:
-                if team == 'home':
-                    #st.write(a_name,venue)
-                    return a_name,venue
-                else:
-                    #st.write(h_name,venue)
-                    return h_name,venue
-    #return None
-def get_matches(pid,matches=[], format="T20", ind=0):
-  #if matches is None:
-    #matches = []
-  url = f"https://www.sofascore.com/api/v1/player/{pid}/events/last/{ind}"
-  parsed = urlparse(url)
-  conn = http.client.HTTPSConnection(parsed.netloc)
-  conn.request("GET", parsed.path)
-  res = conn.getresponse()
-  data = res.read()
-  jdata = json.loads(data.decode("utf-8"))
-  #print(jdata['events'][0])
-  try:
-    for event in jdata['events']:
-      ans=determine_match_format(event)
-      print(ans)
-      if format == ans:
-        matches.append(event['id'])
-        print(event['id'])
-  except KeyError:
-    return matches
-  if jdata.get('hasNextPage'):
-    get_matches(pid,matches, format, ind + 1)
-  return matches
-
+        pd.set_option('display.max_coloumns',None)
+        print(e)
+    return df
 def create_ball_animation(det,role):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
 
@@ -233,9 +298,8 @@ def create_ball_animation(det,role):
               df =analyze_batting_stats(det, role, det[role]['batsman'][frame])
               last_row = df.iloc[-1]
               print(f"{batsman_name} ({batsman_type})")
-              #print(last_row)
+              print(last_row)
               st.markdown(f"## {batsman_name} ({batsman_type})")
-              #visualize_bowler(df[1],df[0])
               st.dataframe(last_row.transpose())
               batters.append(batsman_name)
         except:
@@ -262,13 +326,11 @@ def create_ball_animation(det,role):
             ax2.invert_yaxis()
             ax2.set_title("Wagon wheel (left) and Pitch plot (right)")
 
-    ani = animation.FuncAnimation(fig, update, frames=len(det[role]['runs']), repeat=False)
-    #html = ani.to_jshtml()
-    #st.components.v1.html(html, height=500)
+    ani = FuncAnimation(fig, update, frames=len(det[role]['runs']), repeat=False)
     gif_writer = PillowWriter(fps=1)
-    ani.save(f'{st.session_state.player_name}_bowl_animation_with_{role}.gif', writer=gif_writer)
-    converter(f'{st.session_state.player_name}_bowl_animation_with_{role}.gif')
-    return f'{st.session_state.player_name}_bowl_animation_with_{role}.mp4'
+    ani.save(f'{st.session_state.pname}_bowl_animation_with_{role}.gif', writer=gif_writer)
+    converter(f'{st.session_state.pname}_bowl_animation_with_{role}.gif')
+    return f'{st.session_state.pname}_bowl_animation_with_{role}.mp4'
 def bowler_ball_by_ball(incidents):
     det = {}
     for incident in incidents[::-1]:
@@ -315,42 +377,85 @@ def bowler_ball_by_ball(incidents):
             continue
     return det
 #@st.cache_data
-def append_ball_data(mid,pid,incidents=[]):
-    info = opp_team_venue(mid, pid)
-    #st.write(mid,pid)
-    #incidents=[]
-    url = f"https://www.sofascore.com/api/v1/event/{mid}/incidents"
-    parsed = urlparse(url)
-    conn = http.client.HTTPSConnection(parsed.netloc)
-    conn.request("GET", parsed.path)
-    res = conn.getresponse()
-    data = res.read()
-    jdata = json.loads(data.decode("utf-8"))['incidents']
-    for i in jdata:
-        if i["bowler"]["id"] == pid:
-            i['opp'] = info[0]
-            i['venue'] = info[1]
-            incidents.append(i)
+def append_ball_data(mid,pid):
+    #
+    #ic(st.session_state.info)
+    #if st.session_state.info is None:
+    opp_team_venue(mid,pid)
+        #st.session_state.p_details = None
+        #st.session_state.details = None
+        #ic(info)
+        #st.session_state.info=info
+    #st.write(st.session_state.info)
+    #ic(st.session_state.info)
+    try:
+        jdata2 = scraper(f"https://www.sofascore.com/api/v1/event/{mid}/incidents")
+    except json.JSONDecodeError:
+        return
+    #incidents = []
+    st.session_state.runs = 0
+    st.session_state.overs = 0
+    st.session_state.wickets = 0
+    for i in jdata2['incidents']:
+        #ic(i)
+        if i["bowler"]["id"] == st.session_state.pid:
             #st.write(i)
-    return incidents
+            #st.write(info)
+            if i['wicket']:
+                st.session_state.wickets+=1
+            st.session_state.runs += i['runs']
+            st.session_state.overs += 1
+            if st.session_state.h_name is None:
+                i['opp'] = st.session_state.a_name
+            else:
+                i['opp'] = st.session_state.h_name
+            i['venue'] = st.session_state.venue
+            #st.write(i)
+            #ic(i)
+            #st.session_state.info=None
+            #incidents.append(i)
+            st.session_state.incidents2.append(i)
+    if st.session_state.overs > 0:  # Only display if there were any balls faced
+        st.write(f"Match {mid}: {st.session_state.incidents[-1]['opp']} at {st.session_state.incidents[-1]['venue']}, ",
+                 f"{st.session_state.wickets}/{st.session_state.runs}({st.session_state.overs // 6}.{st.session_state.overs % 6})")
+    else:
+        st.write(f"Match {mid}: No bowling data for player {pid}")
 
-def main(st):
-    if st.session_state.switch==True:
-        #recent = get_matches(786470, format="T20")[:10]
-        incidents = []
-        with st.spinner("Filtering data.."):
-            for i in st.session_state.matches:
-                try:
-                    #st.write(i, st.session_state.pid)
-                    incidents = append_ball_data(i, st.session_state.pid, incidents)
-                    #st.write(incidents)
-                except KeyError:
-                    continue
-        st.session_state.incidents2 = incidents
+    #return incidents
+
+def bowl():
+    # recent = get_matches(786470, format="T20")[:10]
+    # incidents = []
+    if st.session_state.matches==[]:
+        st.warning("Click on Setup option")
+        st.error("You havent choosen the player and matches!")
+        return
+    else:
+        if st.button("Reset"):
+            reset()
+        #st.write(st.session_state.matches)
+        if st.session_state.incidents2==[]:
+            with st.spinner("Filtering data.."):
+                #incidents=[]
+                for j in st.session_state.matches:
+                    try:
+                        st.write(j)
+                        #ic(j)
+                        append_ball_data(j, st.session_state.pid)
+
+                    except KeyError:
+                        continue
+        #st.session_state.incidents2 = incidents
         #st.write(st.session_state.incidents2)
         st.success("Filtering Success...")
-        print(st.session_state)
+        #ic(st.session_state.p_details,st.session_state.details)
+        #st.write(st.session_state.info)
+        #st.session_state.p_details=None
+        #st.session_state.details=None
+        #st.write(st.session_state)
+    #print(st.session_state)
     if st.session_state.incidents2:
+        #ic(st.session_state.incidents2)
         with st.spinner("Extracting ball by ball data"):
             det = bowler_ball_by_ball(st.session_state.incidents2)
         st.success("Extraction successful")
@@ -359,9 +464,7 @@ def main(st):
         for role in st.session_state.det2:
             with st.spinner(f"Performance analysis vs {role}"):
                 st.markdown(f"# vs {role}")
-                #st.write(det)
                 create_ball_animation(det, role)
-                #file = create_ball_animation(det, role)
                 #video_file = open(file, 'rb')
                 #video_bytes = video_file.read()
                 #st.video(video_bytes)

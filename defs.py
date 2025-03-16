@@ -1,4 +1,4 @@
-#Batter perspective Analysis 
+#Batter perspective Analysis
 
 import datetime,requests
 import http.client
@@ -8,13 +8,64 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Circle
-#from moviepy.editor import VideoFileClip
-#import matplotlib.animation as animation
 from matplotlib.animation import FuncAnimation,PillowWriter
 import streamlit as st
 import imageio
-import tempfile,os
+import tempfile
+#from icecream import ic
+def expansion():
+    data = {
+        'Zone': ['G', 'LG', 'H', 'P', 'OD', 'SD', 'OfD', 'CD', 'CtD', 'SqC', 'LC'],
+        'Expansion': ['Glance', 'Leg glance', 'Hook', 'Pull', 'On drive', 'Straight drive', 'Off drive', 'Cover drive',
+                      'Cut Drive', 'Square cut', 'Late cut']
+    }
 
+    exp = pd.DataFrame(data)
+    st.dataframe(exp)
+    st.image("reference.png")
+    #return exp
+def reset():
+    #st.session_state.conn =None
+    st.session_state.match_selected = False
+    st.session_state.mid = None
+    st.session_state.choose_side = None
+    st.session_state.players = None
+    st.session_state.pid = None
+    st.session_state.pname=None
+    st.session_state.info=None
+    st.session_state.details=None
+    st.session_state.p_details=None
+    st.session_state.mformat = None
+    st.session_state.recent_got = []
+    st.session_state.matches = []
+    st.session_state.incidents = []
+    st.session_state.det = None
+    st.session_state.incidents2 = []
+    st.session_state.det2 = None
+    st.session_state.switch = False
+    st.session_state.nmat=None
+    st.session_state.h_name = None
+    st.session_state.a_name = None
+    st.session_state.venue = None
+    st.session_state.df=None
+    st.session_state.runs=0
+    st.session_state.balls=0
+    st.success("Reset Sucesss")
+    st.rerun()
+    return
+import os
+#os.environ["PATH"] += os.pathsep + r'C:\ffmpeg-master-latest-win64-gpl\bin'
+def scraper(url):
+    #url =
+    #ic(url)
+    parsed = urlparse(url)
+    #st.session_state.conn = http.client.HTTPSConnection(parsed.netloc)
+    st.session_state.conn.request("GET", parsed.path)
+    res = st.session_state.conn.getresponse()
+    data = res.read()
+    details = json.loads(data.decode("utf-8"))
+    #ic(details.keys())
+    return details
 def converter(gif_path):
     #os.popen("pip install imageio[ffmpeg]")
     #imageio.plugins.ffmpeg.download()
@@ -46,6 +97,34 @@ def converter(gif_path):
                 st.download_button(label="Download MP4", data=f.read(), file_name=f"{gif_path[:-4]}.mp4", mime="video/mp4")
     except Exception as e:
         st.error(f"An error occurred during conversion: {e}")
+def init():
+    # Get today's date
+    today = datetime.date.today() # Format the date as YYYY-MM-DD
+    formatted_date = today.strftime("%Y-%m-%d")
+    print(formatted_date)
+    parsed = urlparse(f'https://www.sofascore.com/api/v1/sport/cricket/scheduled-events/{formatted_date}')
+    st.session_state.conn = http.client.HTTPSConnection(parsed.netloc)
+    st.session_state.conn.request("GET", parsed.path)
+    res = st.session_state.conn.getresponse()
+    xdata = res.read()
+    data=json.loads(xdata.decode("utf-8"))['events']
+    diction={}
+    for i in data:
+        #if i['tournament']['uniqueTournament']['hasEventPlayerStatistics']==False:
+            #continue
+        #print(i)
+        #print(i.keys())
+        print(i['homeTeam']['name'])
+        print(i['awayTeam']['name'])
+        print(i['id'])
+        #break
+        try:
+            #diction.update({f"{i['homeTeam']['name']} {i['homeScore']['display']} vs {i['awayTeam']['name']} {i['awayScore']['display']}":i['id']})
+            diction.update({f"{i['homeTeam']['name']} vs {i['awayTeam']['name']}": i['id']})
+        except KeyError:
+            continue
+            #diction.update({f"{i['homeTeam']['name']} vs {i['awayTeam']['name']}":i['id']})
+    return diction
 def analyze_bowling_stats(det, bowling_type, player_slug):
     """
     Analyzes a bowler's stats against a specific batsman.
@@ -75,7 +154,7 @@ def analyze_bowling_stats(det, bowling_type, player_slug):
 
     # Extract relevant stats for the matching indices
     stats = {key: [value[i] for i in matching_indices] for key, value in bowling_data.items()}
-
+    #ic(stats)
     df = pd.DataFrame(stats)
 
     # Calculate additional stats
@@ -97,59 +176,57 @@ def analyze_bowling_stats(det, bowling_type, player_slug):
     for zone, count in zone_counts.items():
         df[f'runs_in_{zone}'] = df.loc[df['zone']==zone,'runs'].apply(lambda x: 0 if x=='W' else x).sum()
     df['wickets']=df['wicket'].apply(lambda x: 1 if x!='' else 0).sum()
-    df.drop(['is_boundary','dots','runs','zone','x','y','length','angle'])
+    try:
+        df = df.loc[:, df.iloc[-1] != 0 ]
+    except Exception as e:
+        pd.set_option('display.max_coloumns',None)
     return df
 
-def init():
-    # Get today's date
-    today = datetime.date.today() # Format the date as YYYY-MM-DD
-    formatted_date = today.strftime("%Y-%m-%d")
-    print(formatted_date)
-
-    response = requests.get(
-    f'https://www.sofascore.com/api/v1/sport/cricket/scheduled-events/{formatted_date}'
-    )
-    data=response.json()['events']
-    diction={}
-    for i in data:
-        #if i['tournament']['uniqueTournament']['hasEventPlayerStatistics']==False:
-            #continue
-        print(i)
-        print(i.keys())
-        print(i['homeTeam']['name'])
-        print(i['awayTeam']['name'])
-        print(i['id'])
-        #break
-        try:
-            #diction.update({f"{i['homeTeam']['name']} {i['homeScore']['display']} vs {i['awayTeam']['name']} {i['awayScore']['display']}":i['id']})
-            diction.update({f"{i['homeTeam']['name']} vs {i['awayTeam']['name']}": i['id']})
-        except KeyError:
-            continue
-            #diction.update({f"{i['homeTeam']['name']} vs {i['awayTeam']['name']}":i['id']})
-    return diction
-def get_matches(pid,matches=[], format="T20", ind=0):
-  #if matches is None:
-    #matches = []
-  url = f"https://www.sofascore.com/api/v1/player/{pid}/events/last/{ind}"
-  parsed = urlparse(url)
-  conn = http.client.HTTPSConnection(parsed.netloc)
-  conn.request("GET", parsed.path)
-  res = conn.getresponse()
-  data = res.read()
-  #st.wite(data)
-  jdata = json.loads(data.decode("utf-8"))
+def get_matches(pid,matches=[], format="T20", ind=0,mtime=[]):
+  mdata = scraper(f"https://www.sofascore.com/api/v1/player/{pid}/events/last/{ind}")
+  #ic(mdata.keys())
   #print(jdata['events'][0])
   try:
-    for event in jdata['events']:
+    for event in mdata['events']:
       ans=determine_match_format(event)
-      print(ans)
+      #ic(ans)
+      #print(ans)
       if format == ans:
+        #print(event["startTimestamp"],event['id'])
         matches.append(event['id'])
-        print(event['id'])
-  except KeyError:
-    return matches
-  if jdata.get('hasNextPage'):
-    get_matches(pid,matches, format, ind + 1)
+        mtime.append(event["startTimestamp"])
+        #print(event['id'])
+        #ic(event['id'])
+  except KeyError as e:
+      st.write(e)
+      # Combine the lists into pairs and sort
+      combined = list(zip(mtime, matches))
+      # Sort in descending order based on timestamp (first element of each pair)
+      combined.sort(reverse=True)
+
+      # Unzip back into separate lists
+      mtime_sorted, matches_sorted = zip(*combined)
+
+      # Convert back to lists if needed (zip returns tuples)
+      # mtime_sorted = list(mtime_sorted)
+      matches = list(matches_sorted)
+      return matches
+  if mdata.get('hasNextPage'):
+    get_matches(pid,matches, format, ind + 1,mtime)
+  #st.session_state.recent_got.append(matches)
+  #print(matches)
+  # Combine the lists into pairs and sort
+  combined = list(zip(mtime, matches))
+  # Sort in descending order based on timestamp (first element of each pair)
+  combined.sort(reverse=True)
+
+  # Unzip back into separate lists
+  mtime_sorted, matches_sorted = zip(*combined)
+
+  # Convert back to lists if needed (zip returns tuples)
+  #mtime_sorted = list(mtime_sorted)
+  matches = list(matches_sorted)
+
   return matches
 #init()
 def determine_match_format(data):
@@ -163,8 +240,8 @@ def determine_match_format(data):
     away_innings = data['awayScore'].get('innings', {})
 
     all_innings = list(home_innings.values()) + list(away_innings.values())
-
-    print(all_innings,data['id'])
+    #ic(home_innings,away_innings)
+    #print(all_innings,data['id'])
     if not all_innings:
         return "Unknown format"
 
@@ -173,67 +250,91 @@ def determine_match_format(data):
 
     for innings in all_innings:
         if 'overs' not in innings:  # Handle cases where 'overs' might be missing
+            #ic(innings)
             return "Unknown format"
         total_overs += innings['overs']
 
     # More robust logic based on total overs and number of innings
-    if total_innings > 2: #most likely a test, but check overs
-        if total_overs <= 200: #edge case for rain affected test match
-            return "Test"
-        else:
-            return "Test"
+    #if total_innings > 2: #most likely a test, but check overs
+    if total_overs >= 110: #edge case for rain affected test match
+        return "Test"
+    #else:
+        #return "Test"
     #elif total_innings == 4:
         #return "Test"
-    elif total_innings == 2 and total_overs <= 40:
+    elif total_overs <= 50:
+        #ic('yes')
         return "T20"
-    elif total_innings == 2 and total_overs <= 100:
+    elif total_overs <= 110:
        return "ODI"
     else:
         return "Unknown format"
 def opp_team_venue(mid,pid):
-    url = f"https://www.sofascore.com/api/v1/event/{mid}"
-    parsed = urlparse(url)
-    conn = http.client.HTTPSConnection(parsed.netloc)
-    conn.request("GET", parsed.path)
-    res = conn.getresponse()
-    data = res.read()
-    details = json.loads(data.decode("utf-8"))
-    h_name=details['event']['homeTeam']['name']
-    h_id=details['event']['homeTeam']['id']
-    a_name=details['event']['awayTeam']['name']
-    a_id=details['event']['awayTeam']['id']
-    venue=details['event']['venue']['name']
-    url = f"https://www.sofascore.com/api/v1/event/{mid}/lineups"
-    parsed = urlparse(url)
-    conn = http.client.HTTPSConnection(parsed.netloc)
-    conn.request("GET", parsed.path)
-    res = conn.getresponse()
-    data = res.read()
-    p_details = json.loads(data.decode("utf-8"))
+    details = scraper(f"https://www.sofascore.com/api/v1/event/{mid}")
+    st.session_state.details = details
+    h_name = st.session_state.details['event']['homeTeam']['name']
+    st.session_state.h_name = h_name
+    #h_id=details['event']['homeTeam']['id']
+    a_name = st.session_state.details['event']['awayTeam']['name']
+    st.session_state.a_name = a_name
+    # a_id=details['event']['awayTeam']['id']
+    venue = st.session_state.details['event']['venue']['name']
+    st.session_state.venue = venue
+    # ic(st.session_state.h_name,st.session_state.a_name,st.session_state.venue)
+    # if not st.session_state.p_details:
+    p_details = scraper(f"https://www.sofascore.com/api/v1/event/{mid}/lineups")
+    # st.write(p_details['home']['players'])
+    st.session_state.p_details = p_details
     for team in ['home','away']:
-        for player in p_details[team]['players']:
-            if pid==player['player']['id']:
+        for player in st.session_state.p_details[team]['players']:
+            #ic(player['name'])
+            if st.session_state.pid==player['player']['id']:
                 if team == 'home':
-                    return a_name,venue
+                    st.session_state.h_name=None
+                    return
                 else:
-                    return h_name,venue
+                    st.session_state.a_name=None
+                    return
+    st.session_state.a_name = ''
+    st.session_state.h_name = ''
 #@st.cache_data
-def append_bat_data(mid,pid,incidents=[]):
+def append_bat_data(mid,pid):
+    opp_team_venue(mid, pid)
+    #st.session_state.info=info
     #incidents=[]
-    info = opp_team_venue(mid, pid)
-    url = f"https://www.sofascore.com/api/v1/event/{mid}/incidents"
-    parsed = urlparse(url)
-    conn = http.client.HTTPSConnection(parsed.netloc)
-    conn.request("GET", parsed.path)
-    res = conn.getresponse()
-    data = res.read()
-    jdata = json.loads(data.decode("utf-8"))['incidents']
-    for i in jdata:
+    try:
+        jdata1 = scraper(f"https://www.sofascore.com/api/v1/event/{mid}/incidents")
+    except json.JSONDecodeError:
+        return
+    #st.session_state.runs=0
+    #st.session_state.balls=0
+    st.session_state.runs = 0
+    st.session_state.balls = 0
+    for i in jdata1['incidents']:
         if i["batsman"]["id"] == pid:
-            i['opp'] = info[0]
-            i['venue'] = info[1]
-            incidents.append(i)
-    return incidents
+            st.session_state.runs += i['runs']
+            st.session_state.balls += 1
+            if st.session_state.h_name is None:
+                i['opp'] = st.session_state.a_name
+            else:
+                i['opp'] = st.session_state.h_name
+            i['venue'] = st.session_state.venue
+            st.session_state.incidents.append(i)
+    #st.write(st.session_state.incidents[-1]['opp'],st.session_state.incidents[-1]['venue'],f"{runs}{balls}")
+    #return incidents
+# Display runs and balls for this match
+    if st.session_state.balls > 0:  # Only display if there were any balls faced
+        st.write(f"Match {mid}: {st.session_state.incidents[-1]['opp']} at {st.session_state.incidents[-1]['venue']}, "
+                 f"{st.session_state.runs}({st.session_state.balls})")
+    else:
+        st.write(f"Match {mid}: No batting data for player {pid}")
+        #st.session_state.balls=0
+        #st.session_state.runs=0
+
+    # Update cumulative totals in session state if needed
+    #st.session_state.runs += match_runs
+    #st.session_state.balls += match_balls
+    #return
 def batter_ball_by_ball(incidents):
     det = {}
     for incident in incidents[::-1]:
@@ -292,7 +393,7 @@ def create_bat_animation(det,role):
     # Create a Text object for the title *outside* the update function
     title_text = ax1.text(0.02, 1.05, "", transform=ax1.transAxes, fontsize=12, ha='left', va='top')
     stad_text = ax1.text(0.04, 1.15, "", transform=ax1.transAxes, fontsize=14, ha='left', va='top')
-    bowlers=[]
+
     def update(frame):
         #ax1.clear()  # No longer needed to clear the whole axes
         #ax1.add_patch(circle) #no longer needed to add the circle again and again
@@ -314,15 +415,13 @@ def create_bat_animation(det,role):
         # Update the text of the title object
         title_text.set_text(f"{bowler_name} ({bowler_type})")
         try:
-          if bowler_name != det[role]['bowler'][frame+1] and bowler_name not in bowlers:
+          if bowler_name != det[role]['bowler'][frame+1]:
               df =analyze_bowling_stats(det, role, det[role]['bowler'][frame])
-              last_row = df.iloc[-1]
               print(f"{bowler_name} ({bowler_type})")
-              print(last_row)
               st.markdown(f"## {bowler_name} ({bowler_type})")
+              last_row = df.iloc[-1]
+              print(last_row)
               st.dataframe(last_row.transpose())
-              #visualize_batsman(df[1],df[0])
-              bowlers.append(bowler_name)
         except:
           print("Last record")
         ax1.set_xlim([-10, 10])
@@ -349,6 +448,7 @@ def create_bat_animation(det,role):
 
     ani = FuncAnimation(fig, update, frames=len(det[role]['runs']), repeat=False)
     gif_writer = PillowWriter(fps=1)
-    ani.save(f'{st.session_state.player_name}_bat_animation_with_{role}.gif', writer=gif_writer)
-    converter(f'{st.session_state.player_name}_bat_animation_with_{role}.gif')
-    return f'{st.session_state.player_name}_bat_animation_with_{role}.mp4'
+    ani.save(f'{st.session_state.pname}_bat_animation_with_{role}.gif', writer=gif_writer)
+    converter(f'{st.session_state.pname}_bat_animation_with_{role}.gif')
+    return f'{st.session_state.pname}_bat_animation_with_{role}.mp4'
+#print(get_matches(953740)[0])

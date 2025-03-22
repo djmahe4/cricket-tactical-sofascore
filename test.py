@@ -41,6 +41,9 @@ def reset():
     st.session_state.a_name = None
     st.session_state.df=None
     st.session_state.venue = None
+    st.session_state.runs=0
+    st.session_state.wickets=0
+    st.session_state.overs=0
     st.success("Reset Sucesss")
     st.rerun()
     return
@@ -171,7 +174,17 @@ def get_matches(pid,matches=[], format="T20", ind=0,mtime=[]):
         #print(event['id'])
         #ic(event['id'])
   except KeyError:
-    return matches
+      combined = list(zip(mtime, matches))
+      # Sort in descending order based on timestamp (first element of each pair)
+      combined.sort(reverse=True)
+
+      # Unzip back into separate lists
+      mtime_sorted, matches_sorted = zip(*combined)
+
+      # Convert back to lists if needed (zip returns tuples)
+      # mtime_sorted = list(mtime_sorted)
+      matches = list(matches_sorted)
+      return matches
   if mdata.get('hasNextPage'):
     get_matches(pid,matches, format, ind + 1,mtime)
   #st.session_state.recent_got.append(matches)
@@ -380,11 +393,18 @@ def append_ball_data(mid,pid):
     except json.JSONDecodeError:
         return
     #incidents = []
+    st.session_state.runs = 0
+    st.session_state.overs = 0
+    st.session_state.wickets = 0
     for i in jdata2['incidents']:
         #ic(i)
         if i["bowler"]["id"] == st.session_state.pid:
             #st.write(i)
             #st.write(info)
+            if i['wicket']:
+                st.session_state.wickets+=1
+            st.session_state.runs += i['runs']
+            st.session_state.overs += 1
             if st.session_state.h_name is None:
                 i['opp'] = st.session_state.a_name
             else:
@@ -395,6 +415,12 @@ def append_ball_data(mid,pid):
             #st.session_state.info=None
             #incidents.append(i)
             st.session_state.incidents2.append(i)
+    if st.session_state.overs > 0:  # Only display if there were any balls faced
+        st.write(f"Match {mid}: {st.session_state.incidents2[-1]['opp']} at {st.session_state.incidents2[-1]['venue']}, ",
+                 f"{st.session_state.wickets}/{st.session_state.runs}({st.session_state.overs // 6}.{st.session_state.overs % 6})")
+    else:
+        st.write(f"Match {mid}: No bowling data for player {pid}")
+
     #return incidents
 
 def bowl():

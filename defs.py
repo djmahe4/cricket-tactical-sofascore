@@ -48,6 +48,8 @@ def reset():
     st.session_state.a_name = None
     st.session_state.venue = None
     st.session_state.df=None
+    st.session_state.runs=0
+    st.session_state.balls=0
     st.success("Reset Sucesss")
     st.rerun()
     return
@@ -190,13 +192,25 @@ def get_matches(pid,matches=[], format="T20", ind=0,mtime=[]):
       #ic(ans)
       #print(ans)
       if format == ans:
-        print(event["startTimestamp"],event['id'])
+        #print(event["startTimestamp"],event['id'])
         matches.append(event['id'])
         mtime.append(event["startTimestamp"])
         #print(event['id'])
         #ic(event['id'])
-  except KeyError:
-    return matches
+  except KeyError as e:
+      st.write(e)
+      # Combine the lists into pairs and sort
+      combined = list(zip(mtime, matches))
+      # Sort in descending order based on timestamp (first element of each pair)
+      combined.sort(reverse=True)
+
+      # Unzip back into separate lists
+      mtime_sorted, matches_sorted = zip(*combined)
+
+      # Convert back to lists if needed (zip returns tuples)
+      # mtime_sorted = list(mtime_sorted)
+      matches = list(matches_sorted)
+      return matches
   if mdata.get('hasNextPage'):
     get_matches(pid,matches, format, ind + 1,mtime)
   #st.session_state.recent_got.append(matches)
@@ -292,15 +306,35 @@ def append_bat_data(mid,pid):
         jdata1 = scraper(f"https://www.sofascore.com/api/v1/event/{mid}/incidents")
     except json.JSONDecodeError:
         return
+    #st.session_state.runs=0
+    #st.session_state.balls=0
+    st.session_state.runs = 0
+    st.session_state.balls = 0
     for i in jdata1['incidents']:
         if i["batsman"]["id"] == pid:
+            st.session_state.runs += i['runs']
+            st.session_state.balls += 1
             if st.session_state.h_name is None:
                 i['opp'] = st.session_state.a_name
             else:
                 i['opp'] = st.session_state.h_name
             i['venue'] = st.session_state.venue
             st.session_state.incidents.append(i)
+    #st.write(st.session_state.incidents[-1]['opp'],st.session_state.incidents[-1]['venue'],f"{runs}{balls}")
     #return incidents
+# Display runs and balls for this match
+    if st.session_state.balls > 0:  # Only display if there were any balls faced
+        st.write(f"Match {mid}: {st.session_state.incidents[-1]['opp']} at {st.session_state.incidents[-1]['venue']}, "
+                 f"{st.session_state.runs}({st.session_state.balls})")
+    else:
+        st.write(f"Match {mid}: No batting data for player {pid}")
+        #st.session_state.balls=0
+        #st.session_state.runs=0
+
+    # Update cumulative totals in session state if needed
+    #st.session_state.runs += match_runs
+    #st.session_state.balls += match_balls
+    #return
 def batter_ball_by_ball(incidents):
     det = {}
     for incident in incidents[::-1]:

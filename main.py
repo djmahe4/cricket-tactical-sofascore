@@ -76,12 +76,14 @@ def bat():
         if st.button("Reset"):
             reset()
         with st.spinner("Filtering data.."):
+            st.write(st.session_state.matches)
             if st.session_state.incidents==[]:
                 for j in st.session_state.matches:
                     try:
                         append_bat_data(j, st.session_state.pid)
                         # st.session_state.incidents = incidents
-                    except KeyError:
+                    except KeyError as e:
+                        st.write(e)
                         continue
         st.success("Filtering Success...")
         #st.write(st.session_state.incidents)
@@ -130,6 +132,10 @@ if __name__=="__main__":
         st.session_state.incidents2 = []
         st.session_state.det2 = None
         st.session_state.switch = False
+        st.session_state.runs=0
+        st.session_state.overs=0
+        st.session_state.balls=0
+        st.session_state.wickets=0
     pg=st.navigation([st.Page(app,title="Setup"),st.Page(bat,title="Batting"),st.Page(bowl,title="Bowling"),
                       st.Page(reset,title='Reset'),st.Page(expansion,title="Shot Notations")])
     pg.run()

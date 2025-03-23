@@ -2,3 +2,4 @@ matplotlib
 imageio
 imageio[ffmpeg]
 #moviepy
+plotly

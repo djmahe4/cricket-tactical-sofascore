@@ -252,7 +252,7 @@ def filtered():
             st.plotly_chart(fig7)
         with colb:
             # Group by bowler type and calculate total runs, total balls, and strike rate
-            st.dataframe(filtered_df['runs'])
+            #st.dataframe(filtered_df['runs'])
             bowler_stats_type = filtered_df.groupby('bowler_type').agg(
                 total_runs=('runs', lambda x: (x != 'W').sum()),
                 total_balls=('runs', 'count'),  # Total balls faced against each bowler type
@@ -292,7 +292,7 @@ def filtered():
             st.metric("Strike Rate", f"{strike_rate:.1f}")
         # Group by mid and zone
         zone_stats = filtered_df.groupby('zone').agg(
-            total_runs=('runs', lambda x: (x != '').sum()),  # Total runs in the zone
+            total_runs=('runs', lambda x: (x != 'W').sum()),  # Total runs in the zone
             total_balls=('runs', 'count'),  # Total balls faced in the zone
             boundaries=('is_boundary', 'sum'),  # Total boundaries in the zone
             matches=('mid', lambda x: x.nunique())  # Number of unique matches in the zone

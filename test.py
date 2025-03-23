@@ -296,6 +296,7 @@ def create_ball_animation(det,role):
           if batsman_name != det[role]['batsman'][frame+1] and batsman_name not in batters:
               #ax1.clear()
               df =analyze_batting_stats(det, role, det[role]['batsman'][frame])
+              st.session_state.df.add_rows(df)
               last_row = df.iloc[-1]
               print(f"{batsman_name} ({batsman_type})")
               print(last_row)
@@ -304,6 +305,13 @@ def create_ball_animation(det,role):
               batters.append(batsman_name)
         except:
           print("Last record")
+          df = analyze_batting_stats(det, role, det[role]['batsman'][frame])
+          last_row = df.iloc[-1]
+          print(f"{batsman_name} ({batsman_type})")
+          print(last_row)
+          st.markdown(f"## {batsman_name} ({batsman_type})")
+          st.dataframe(last_row.transpose())
+          batters.append(batsman_name)
         ax1.set_xlim([-10, 10])
         ax1.set_ylim([-10, 10])
 
@@ -343,12 +351,14 @@ def bowler_ball_by_ball(incidents):
                 "x": [],
                 "y": [],
                 "length": [],
+                'over':[],
                 "angle": [],
                 "batsman": [],
                 "wicket": [],
                 "zone": [],
                 "opp":[],
-                "venue":[]
+                "venue":[],
+                "mid":[]
             }
         # Debugging output
         # print("Bowl Detail:", j.get('bowlDetail'))
@@ -366,6 +376,8 @@ def bowler_ball_by_ball(incidents):
             det[batter_type]["length"].append(incident.get('length', 0))
             det[batter_type]["zone"].append(incident.get('zone', ""))
             det[batter_type]["angle"].append(incident.get('angle', 0))
+            det[batter_type]["over"].append(incident.get('over', 0))
+            det[batter_type]["mid"].append(incident.get('mid'))
             det[batter_type]['batsman'].append(incident['batsman']['slug'])
             if incident.get('bowlDetail'):
                 det[batter_type]["wicket"].append(incident['bowlDetail'])
@@ -410,6 +422,7 @@ def append_ball_data(mid,pid):
             else:
                 i['opp'] = st.session_state.h_name
             i['venue'] = st.session_state.venue
+            i['mid']=mid
             #st.write(i)
             #ic(i)
             #st.session_state.info=None
@@ -448,6 +461,7 @@ def bowl():
         #st.session_state.incidents2 = incidents
         #st.write(st.session_state.incidents2)
         st.success("Filtering Success...")
+        st.write("Balls bowled: ", len(st.session_state.incidents2))
         #ic(st.session_state.p_details,st.session_state.details)
         #st.write(st.session_state.info)
         #st.session_state.p_details=None

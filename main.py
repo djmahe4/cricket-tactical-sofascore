@@ -3,7 +3,27 @@ import datetime
 from defs import *
 import requests
 from test import bowl
+import pandas as pd
 #from icecream import ic
+import streamlit as st
+import pandas as pd
+from grapht import filtered,filtered2
+
+
+def analysis_page():
+    if st.session_state.det:
+        #st.write(st.session_state.det)
+        filtered()
+    elif st.session_state.det2:
+        filtered2()
+    else:
+        st.error("Choose any of them first!")
+        ba, bo = st.columns(2)
+        with ba:
+            st.page_link(st.Page(bat))
+        with bo:
+            st.page_link(st.Page(bowl))
+
 
 @st.cache_resource
 def conn_make():
@@ -54,7 +74,7 @@ def app():
     if 'recent_got' in st.session_state and st.session_state.recent_got != []:
         #nmat=st.slider("Select number of matches",min_value=0,max_value=len(st.session_state.recent_got))
         st.success(f"Found data for {len(st.session_state.recent_got)} {st.session_state.mformat} matches of {st.session_state.pname}")
-        nmat=st.number_input(f"Enter an integer less than {len(st.session_state.recent_got)}")
+        nmat=st.number_input(f"Enter an integer less than {len(st.session_state.recent_got)}",step=1)
         st.session_state.nmat=nmat
         st.write(st.session_state.nmat)
         if st.button("Done"):
@@ -86,7 +106,7 @@ def bat():
                         st.write(e)
                         continue
         st.success("Filtering Success...")
-        #st.write(st.session_state.incidents)
+        st.write("Balls faced: ",len(st.session_state.incidents))
 
         if st.session_state.incidents :
             with st.spinner("Extracting ball by ball data"):
@@ -94,6 +114,7 @@ def bat():
             st.success("Extraction successful")
             st.session_state.det=det
         if st.session_state.det :
+            #st.write(st.session_state.det)
             for role in st.session_state.det:
                 with st.spinner(f"Performance analysis vs {role}"):
                     st.markdown(f"# vs {role}")
@@ -109,7 +130,6 @@ if __name__=="__main__":
         conn_make()
         contents = init()  # Only calls match_id_init once
         choices = contents
-
         st.session_state.choices = choices
         st.session_state.match_selected = False
         st.session_state.mid = None
@@ -124,7 +144,7 @@ if __name__=="__main__":
         st.session_state.a_name=None
         st.session_state.venue=None
         st.session_state.mformat = None
-        st.session_state.df=None
+        st.session_state.df=pd.DataFrame()
         st.session_state.recent_got = []
         st.session_state.matches = []
         st.session_state.incidents = []
@@ -137,5 +157,6 @@ if __name__=="__main__":
         st.session_state.balls=0
         st.session_state.wickets=0
     pg=st.navigation([st.Page(app,title="Setup"),st.Page(bat,title="Batting"),st.Page(bowl,title="Bowling"),
-                      st.Page(reset,title='Reset'),st.Page(expansion,title="Shot Notations")])
+                      st.Page(reset,title='Reset'),st.Page(expansion,title="Shot Notations"),
+                      st.Page(analysis_page,title="Analysis")])
     pg.run()

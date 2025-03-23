@@ -97,6 +97,8 @@ def converter(gif_path):
                 st.download_button(label="Download MP4", data=f.read(), file_name=f"{gif_path[:-4]}.mp4", mime="video/mp4")
     except Exception as e:
         st.error(f"An error occurred during conversion: {e}")
+        st.image(gif_path, use_column_width=True)
+
 def init():
     # Get today's date
     today = datetime.date.today() # Format the date as YYYY-MM-DD
@@ -180,6 +182,7 @@ def analyze_bowling_stats(det, bowling_type, player_slug):
         df = df.loc[:, df.iloc[-1] != 0 ]
     except Exception as e:
         pd.set_option('display.max_coloumns',None)
+    #pd.concat([st.session_state.df,df],ignore_index=True)
     return df
 
 def get_matches(pid,matches=[], format="T20", ind=0,mtime=[]):
@@ -192,9 +195,11 @@ def get_matches(pid,matches=[], format="T20", ind=0,mtime=[]):
       #ic(ans)
       #print(ans)
       if format == ans:
+        match_id = event['id']
         #print(event["startTimestamp"],event['id'])
-        matches.append(event['id'])
-        mtime.append(event["startTimestamp"])
+        if match_id not in matches:
+            matches.append(match_id)
+            mtime.append(event["startTimestamp"])
         #print(event['id'])
         #ic(event['id'])
   except KeyError as e:
@@ -319,6 +324,7 @@ def append_bat_data(mid,pid):
             else:
                 i['opp'] = st.session_state.h_name
             i['venue'] = st.session_state.venue
+            i['mid']=mid
             st.session_state.incidents.append(i)
     #st.write(st.session_state.incidents[-1]['opp'],st.session_state.incidents[-1]['venue'],f"{runs}{balls}")
     #return incidents
@@ -347,12 +353,14 @@ def batter_ball_by_ball(incidents):
                 "x": [],
                 "y": [],
                 "length": [],
+                "over":[],
                 "angle": [],
                 "bowler": [],
                 "wicket": [],
                 "zone": [],
                 "opp":[],
-                "venue":[]
+                "venue":[],
+                "mid":[]
             }
         # Debugging output
         # print("Bowl Detail:", j.get('bowlDetail'))
@@ -370,6 +378,8 @@ def batter_ball_by_ball(incidents):
             det[bowler_type]["length"].append(incident.get('length', 0))
             det[bowler_type]["zone"].append(incident.get('zone', ""))
             det[bowler_type]["angle"].append(incident.get('angle', 0))
+            det[bowler_type]["over"].append(incident.get('over', 0))
+            det[bowler_type]["mid"].append(incident.get('mid'))
             det[bowler_type]['bowler'].append(incident['bowler']['slug'])
             if incident.get('bowlDetail'):
                 det[bowler_type]["wicket"].append(incident['bowlDetail'])
@@ -383,6 +393,19 @@ def batter_ball_by_ball(incidents):
 # Determine match format
 #match_format = determine_match_format(data)
 #print(f"The match format is: {match_format}")
+def handle_maindf(last_row):
+    # Step 1: Check if the DataFrame is empty
+    if st.session_state.df.empty:
+        # Step 2: If empty, create a new DataFrame from last_row
+        new = pd.DataFrame([last_row])
+        st.session_state.df = new
+    else:
+        # Step 3: If not empty, handle missing columns and append the row
+        missing_columns = set(last_row.index) - set(st.session_state.df.columns)
+        for col in missing_columns:
+            st.session_state.df[col] = None  # Add missing columns with default value (e.g., None or NaN)
+        pd.concat([st.session_state.df,pd.DataFrame([last_row])], ignore_index=True)
+        #st.session_state.df.append(new)
 def create_bat_animation(det,role):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
 
@@ -421,9 +444,17 @@ def create_bat_animation(det,role):
               st.markdown(f"## {bowler_name} ({bowler_type})")
               last_row = df.iloc[-1]
               print(last_row)
+              handle_maindf(last_row)
               st.dataframe(last_row.transpose())
         except:
           print("Last record")
+          df = analyze_bowling_stats(det, role, det[role]['bowler'][frame])
+          print(f"{bowler_name} ({bowler_type})")
+          st.markdown(f"## {bowler_name} ({bowler_type})")
+          last_row = df.iloc[-1]
+          print(last_row)
+          #handle_maindf(last_row)
+          st.dataframe(last_row.transpose())
         ax1.set_xlim([-10, 10])
         ax1.set_ylim([-10, 10])
 

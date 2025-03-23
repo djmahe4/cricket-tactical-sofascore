@@ -275,7 +275,11 @@ def filtered():
 
         # Advanced Analysis: Strike Rate and Boundary Percentage
         st.header("Advanced Metrics 📈")
+        # Convert 'runs' column to numeric, coercing errors to NaN
+        df['runs'] = pd.to_numeric(df['runs'], errors='coerce')
 
+        # Replace NaN values with 0 and convert to integers
+        df['runs'] = df['runs'].fillna(0).astype(int)
         # Calculate boundary stats
         filtered_df['is_boundary'] = filtered_df['runs'].apply(lambda x: 1 if x in [4, 6] else 0)
         boundaries = filtered_df['is_boundary'].sum()
